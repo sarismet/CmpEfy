@@ -4,12 +4,14 @@ from flask import(
     request,
     session,
     redirect,
-    url_for
+    url_for,
+    send_from_directory
 )
 
 
 app = Flask(__name__)
 app.secret_key = "ismetsari"
+app.static_folder = 'static'
 
 
 @app.route('/login', methods=['GET', 'POST'])
