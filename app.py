@@ -89,7 +89,7 @@ def login():
             user = query_db('select * from Listeners where email = ? and username = ?', [request.form['email_of_listener'], request.form['username_of_listener']], one=True)
             if user is None:
                 insert_artist(request.form['email_of_listener'],request.form['username_of_listener'])
-            return redirect(url_for('profile')) 
+            return redirect(url_for('listener')) 
                 
         elif request.form["button"]=="artist":
             user = query_db('select * from Artists where name = ? and surname = ?', [request.form['name_of_artist'], request.form['surname_of_artist']], one=True)
@@ -99,10 +99,9 @@ def login():
     return render_template('login.html')
 
 
-@app.route('/profile')
-def profile():
-
-    return render_template('profile.html')
+@app.route('/listener')
+def listener():
+    return render_template('listener.html')
 
 
 @app.route('/first')
