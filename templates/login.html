@@ -23,10 +23,12 @@
             <p>Make music with only one touch</p>
         </header>
         <div class="form-box">
+            <p class="text">Who are you?</p>
             <div class="bottom-box">
+
                 <div id="btn"></div>
-                <button type="button" class="toggle-btn" id="1" onclick="login()">Login</button>
-                <button type="button" class="toggle-btn" id="2" onclick="register()">Sign up</button>
+                <button type="button" class="toggle-btn" id="1" onclick="login()">Listener</button>
+                <button type="button" class="toggle-btn" id="2" onclick="register()">Artist</button>
 
             </div>
             <div class="social-icons">
@@ -43,11 +45,11 @@
             </div>
 
             <form id="login" class="input-group">
-                <p class="text">Welcome Listerner.</p>
-                <button type=" submit" class="btn-submit">Log in</button>
+                <p class="text">Welcome Listenner.</p>
+                <button type=" submit" method="listener" class="btn-submit">Log in</button>
 
             </form>
-            <form id="register" class="input-group">
+            <form method="POST" id="register" class="input-group">
                 <p class="text">Welcome Artist.</p>
                 <button type="submit" class="btn-submit">Log in</button>
 
