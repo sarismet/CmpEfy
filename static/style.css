@@ -96,9 +96,9 @@ header p {
 
 .form-box {
     width: 425;
-    height: 580px;
+    height: 100%;
     position: relative;
-    margin: 6%;
+    margin: 3%;
     background: whitesmoke;
     padding: 5px;
     border: red;
@@ -194,10 +194,10 @@ p.text {
 
 .btn-submit {
     width: 85%;
+    margin-top: 19%;
     padding: 10px 10px;
     cursor: pointer;
     display: block;
-    margin: auto;
     background: linear-gradient(to right, #ff105f, #ffad06);
     border: 0;
     outline: none;
@@ -210,8 +210,4 @@ p.text {
 
 #register {
     left: 450px;
-}
-
-.btn-submit {
-    margin-top: 10px;
 }
