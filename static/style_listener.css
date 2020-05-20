@@ -94,11 +94,25 @@ body {
     margin-top: 50px;
 }
 
+.services-box .i {
+    top: 0;
+    left: 0;
+
+}
+
+.services-box .span {
+    top: 0;
+    left: 0;
+
+}
+
 .services-box {
-    background: #f9f9f9;
+    background: rgb(255, 255, 255);
+    height: 192px;
+    width: 362px;
     padding: 10px;
     margin-top: 10px;
-    height: 172px;
+    border-color: rgb(0, 0, 0);
     border-top-right-radius: 50px;
     border-bottom-left-radius: 50px;
 
@@ -111,9 +125,9 @@ body {
 }
 
 .services-box p {
-    font-size: 25px;
+    font-size: 15px;
     margin-top: 20px;
-    color: rgb(22, 1, 1);
+    color: #777;
 }
 
 .services-box:hover {

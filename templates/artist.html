@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>IBABE</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+        integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+        integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style_listener.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='smooth-scroll.js') }}"></script>
+
+    </script>
+    <script>
+        var scroll = new SmoothScroll('a[href*="#"]');
+    </script>
+</head>
+
+<body>
+    <header id="header">
+        <div class="container-fluid p-0">
+            <div class="nav-bar">
+
+                <nav class="navbar navbar-expand-lg">
+                    <a class="navbar-brand" href="#"><img src="/static/logo.png"></a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav ml-auto">
+                            <li class="nav-item active">
+                                <a class="nav-link" href="#header">Home <span class="sr-only">(current)</span></a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#interest">Services</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#contacts">Contact</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+
+            </div>
+        </div>
+
+
+        <div class="container text-center" id="header">
+            <div class="row">
+                <div class="col-md-12 col-sm-12">
+                    <div class="firstpart">
+                        <h1> Welcome Artist</h1>
+                        <img src="/static/family.jpg" style="width:100%" alt="personal photo of our family">
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+        <form method="POST" id="register" class="input-group">
+
+
+
+            <div class="container" id="interest">
+                <h1 class="text-center">What do you want to do? </h1>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <button type="submit" class="services-box" name="button" value="add_a_song"><i
+                                class="fas fa-chart-line"></i><span> View </span>
+                            <p>Add a song to an album.
+                            </p>
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="services-box" name="button" value="delete_a_song"><i
+                                class="fas fa-chart-line"></i><span> View </span>
+                            <p>Delete a song from an album.
+                            </p>
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="services-box" name="button" value="update_a_song"><i
+                                class="fas fa-chart-line"></i><span> View </span>
+                            <p>Update a song in an album.
+                            </p>
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <button type="submit" class="services-box" name="button" value="add_an_album"><i
+                                class="fas fa-chart-line"></i><span> View </span>
+                            <p>Add an album to the system.
+                            </p>
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="services-box" name="button" value="delete_an_album"><i
+                                class="fas fa-chart-line"></i><span> View </span>
+                            <p>Delete an album from the system.
+                            </p>
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="services-box" name="button" value="update_an_album"><i
+                                class="fas fa-chart-line"></i><span> View </span>
+                            <p>Update an album in the system.
+                            </p>
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </form>
+        <div class="contact" id="contacts">
+            <div class="container text-center">
+                <h1>Contact Me</h1>
+                <p>Bena ulasabileceğiniz araclar</p>
+                <div class="row">
+                    <div class="col-md-3">
+                        <i class="fas fa-phone"></i>
+                        <p>0533 053 28 59</p>
+                    </div>
+                    <div class="col-md-3">
+                        <i class="fas fa-envelope"></i>
+                        <p>sarismet2825@gmail.com</p>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="https://github.com/sarismet" target="_blank"> <i class="fab fa-github"></i></a>
+
+                    </div>
+                    <div class="col-md-3">
+
+                        <a href="https://www.linkedin.com/in/ismet-sar%C4%B1-bbb2b6183/" target="_blank"> <i
+                                class="fab fa-linkedin-in"></i></a>
+
+
+                    </div>
+                </div>
+
+            </div>
+            <div class="footer text-center">
+
+                <p class="text-muted">Copyright
+                    ©2020 All rights reserved. This
+                    website is designed by
+                    <span> ismet sarı</span>
+                </p>
+
+            </div>
+        </div>
+
+    </header>

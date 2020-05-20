@@ -94,19 +94,69 @@ def login():
         elif request.form["button"]=="artist":
             user = query_db('select * from Artists where name = ? and surname = ?', [request.form['name_of_artist'], request.form['surname_of_artist']], one=True)
             if user is None:
-                insert_artist(request.form['email_of_listener'],request.form['username_of_listener'])
-                return redirect(url_for('first')) 
+                insert_artist(request.form['name_of_artist'],request.form['surname_of_artist'])
+            return redirect(url_for('artist')) 
     return render_template('login.html')
 
 
-@app.route('/listener')
+@app.route('/listener',methods=['GET', 'POST'])
 def listener():
     return render_template('listener.html')
 
 
-@app.route('/first')
-def first():
+@app.route('/artist',methods=['GET', 'POST'])
+def artist():
 
-    return render_template('first.html')
+    if request.method == 'POST':
+        if request.form["button"]=="add_a_song":
+            return redirect(url_for('add_song')) 
+        elif request.form["button"]=="add_an_album":
+            return redirect(url_for('add_album')) 
+
+        elif request.form["button"]=="delete_an_album":
+            return redirect(url_for('delete_album')) 
+
+        elif request.form["button"]=="update_an_album":
+            return redirect(url_for('update_album')) 
+
+        elif request.form["button"]=="delete_a_song":
+            return redirect(url_for('delete_song')) 
+
+        elif request.form["button"]=="update_a_song":
+            return redirect(url_for('update_song')) 
+           
+    return render_template('artist.html')
+
+@app.route('/add_song')
+def add_song():
+
+    return render_template('add_song.html')    
+
+@app.route('/delete_song')
+def delete_song():
+
+    return render_template('delete_song.html')   
+
+@app.route('/update_song')
+def update_song():
+
+    return render_template('update_song.html')   
+
+@app.route('/add_album')
+def add_album():
+
+    return render_template('add_album.html') 
+
+@app.route('/delete_album')
+def delete_album():
+
+    return render_template('delete_album.html')   
+
+@app.route('/update_album')
+def update_album():
+
+    return render_template('update_album.html')   
+
+
 if __name__ == '__main__':
     app.run(port=5000,debug=True)

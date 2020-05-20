@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Tap Music</title>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+        integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='delete_song.css') }}">
+
+</head>
+
+<body>
+    <div class="app">
+        <div class="form-box">
+            <p class="text">
+                Welcome Artist</p>
+
+            <form method="POST" id="login" class="input-group">
+                <p class="text">Update an album</p>
+
+                <input type="text" class="input-field" name="ID_of_song" placeholder="ID of album" required>
+                <input type="text" class="input-field" name="new_genre_of_album" placeholder="new genre of album"
+                    required>
+                <input type="text" class="input-field" name="new_title_of_album" placeholder="new title of album"
+                    required>
+                <button type=" submit" name="button" value="update_album" class="btn-submit">Update</button>
+
+            </form>
+
+        </div>
+
+
+
+</body>
+
+</html>

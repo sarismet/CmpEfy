@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css?family=Kaushan+Script|Molle:400i|Uncial+Antiqua|Zhi+Mang+Xing&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: sans-serif;
+}
+
+body {
+    background-image: url(add_album.jpg);
+
+    background-position: center center;
+
+    background-repeat: no-repeat;
+    font-family: "Raleway", sans-serif;
+    background-attachment: fixed;
+    background-size: cover;
+
+}
+
+.app {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+
+.form-box {
+    width: 425px;
+    height: 500px;
+    position: relative;
+    margin-top: 15%;
+    background: whitesmoke;
+    padding: 5px;
+    border: red;
+    overflow: hidden;
+    align-items: center;
+}
+
+#btn {
+    top: 0;
+    left: 0;
+    position: absolute;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, #ff105f, #ffad06);
+    border-radius: 30px;
+    transition: 0.5s;
+
+}
+
+
+p.text {
+    font-family: 'Caveat', cursive;
+    font-size: 45px;
+
+    text-align: center;
+}
+
+.input-group {
+    top: 180px;
+    align-items: center;
+    position: absolute;
+    width: 75%;
+    margin-left: 47px;
+
+    transition: .5s;
+    font-size: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+.input-field {
+    width: 100%;
+    padding: 10px 10px;
+    margin: 5px, 5px;
+    border-left: 0;
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 1px solid #999;
+    outline: none;
+    background: transparent;
+
+}
+
+.btn-submit {
+    width: 85%;
+    margin-top: 19%;
+    padding: 10px 10px;
+    cursor: pointer;
+    display: block;
+    background: linear-gradient(to right, #ff105f, #ffad06);
+    border: 0;
+    outline: none;
+    border-radius: 30px;
+}
