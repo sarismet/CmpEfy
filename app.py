@@ -35,28 +35,60 @@ def query_db(query, args=(), one=False):
     
 
 
-def insert_artist(name,surname):
+def insert_album(id,genre,title,likes):
 
 
-    sqlite_insert_with_param = """INSERT INTO Artists
-                          (name, surname) 
-                          VALUES (?, ?);"""
+    sqlite_insert_with_param = """INSERT INTO Albums
+                          (id,genre,title,likes,listsofsongs)
+                          VALUES (?,?,?,?,?);"""
+    listsofsongs=str(id)+"songs"
+    data_tuple = (id,genre,title,likes,listsofsongs)
+    db=get_db()
+    db.cursor().execute(sqlite_insert_with_param, data_tuple)
+    string="CREATE TABLE IF NOT EXISTS "+listsofsongs+" (idofalbum INT NOT NULL);"
+    db.cursor().execute(string)
+    db.commit()
 
-    data_tuple = (name, surname)
+
+def insert_song(id,title,likes,album_id):
+    
+
+    sqlite_insert_with_param = """INSERT INTO Songs
+                          (id,title,likes)
+                          VALUES (?,?,?);"""
+
+    data_tuple = (id,title,likes)
     db=get_db()
     db.cursor().execute(sqlite_insert_with_param, data_tuple)
     db.commit()
 
-def insert_listener(email,username):
+def insert_artist(name,surname):
     
 
     sqlite_insert_with_param = """INSERT INTO Artists
-                          (email, username) 
-                          VALUES (?, ?);"""
-
-    data_tuple = (email, username)
+                          (name, surname,listsofalbums) 
+                          VALUES (?, ?,?);"""
+    listsofalbums=str(name)+str(surname)+"listsofalbums"
+    data_tuple = (name, surname,listsofalbums)
     db=get_db()
     db.cursor().execute(sqlite_insert_with_param, data_tuple)
+    string="CREATE TABLE IF NOT EXISTS "+listsofalbums+" (idofalbum INT NOT NULL);"
+    db.cursor().execute(string)
+    db.commit()
+
+
+def insert_listener(email,username):
+    
+
+    sqlite_insert_with_param = """INSERT INTO Listeners
+                          (email, username,listsoflikedsongs) 
+                          VALUES (?, ?,?);"""
+    listsoflikedsongs=str(username)+"likedsongs"
+    data_tuple = (email, username,listsoflikedsongs)
+    db=get_db()
+    db.cursor().execute(sqlite_insert_with_param, data_tuple)
+    string="CREATE TABLE IF NOT EXISTS "+listsoflikedsongs+" (idofsong INT NOT NULL);"
+    db.cursor().execute(string)
     db.commit()
 
 
@@ -65,14 +97,27 @@ def create_table():
     db=get_db()
     db.cursor().execute('''
     CREATE TABLE IF NOT EXISTS Artists(name VARCHAR(20) NOT NULL,
-    surname VARCHAR(20) NOT NULL
+    surname VARCHAR(20) NOT NULL,listsofalbums VARCHAR(45) NOT NULL
     );
     ''')
     db.cursor().execute('''
     CREATE TABLE IF NOT EXISTS Listeners(email VARCHAR(100) NOT NULL,
-    username VARCHAR(20) NOT NULL
+    username VARCHAR(20) NOT NULL,listsoflikedsongs VARCHAR(35) NOT NULL
     );
     ''')
+
+    db.cursor().execute('''
+    CREATE TABLE IF NOT EXISTS Albums(id INT NOT NULL,
+    genre VARCHAR(20) NOT NULL , title VARCHAR(20) , likes INT , listsofsongs VARCHAR(25)
+    );
+    ''')
+
+    db.cursor().execute('''
+    CREATE TABLE IF NOT EXISTS Songs(id INT NOT NULL,
+    title VARCHAR(100) NOT NULL, likes INT
+    );
+    ''')
+
     db.commit()
 
 
@@ -88,7 +133,7 @@ def login():
         if request.form["button"]=="listener":
             user = query_db('select * from Listeners where email = ? and username = ?', [request.form['email_of_listener'], request.form['username_of_listener']], one=True)
             if user is None:
-                insert_artist(request.form['email_of_listener'],request.form['username_of_listener'])
+                insert_listener(request.form['email_of_listener'],request.form['username_of_listener'])
             return redirect(url_for('listener')) 
                 
         elif request.form["button"]=="artist":
@@ -98,6 +143,29 @@ def login():
             return redirect(url_for('artist')) 
     return render_template('login.html')
 
+
+@app.route('/artist',methods=['GET', 'POST'])
+def artist():
+
+    if request.method == 'POST':
+        if request.form["button"]=="add_a_song":
+            return redirect(url_for('add_song')) 
+        elif request.form["button"]=="add_an_album":
+            return redirect(url_for('add_album')) 
+
+        elif request.form["button"]=="delete_an_album":
+            return redirect(url_for('delete_album')) 
+
+        elif request.form["button"]=="update_an_album":
+            return redirect(url_for('update_album')) 
+
+        elif request.form["button"]=="delete_a_song":
+            return redirect(url_for('delete_song')) 
+
+        elif request.form["button"]=="update_a_song":
+            return redirect(url_for('update_song')) 
+           
+    return render_template('artist.html')
 
 @app.route('/listener',methods=['GET', 'POST'])
 def listener():
@@ -132,28 +200,7 @@ def listener():
 
 
 
-@app.route('/artist',methods=['GET', 'POST'])
-def artist():
 
-    if request.method == 'POST':
-        if request.form["button"]=="add_a_song":
-            return redirect(url_for('add_song')) 
-        elif request.form["button"]=="add_an_album":
-            return redirect(url_for('add_album')) 
-
-        elif request.form["button"]=="delete_an_album":
-            return redirect(url_for('delete_album')) 
-
-        elif request.form["button"]=="update_an_album":
-            return redirect(url_for('update_album')) 
-
-        elif request.form["button"]=="delete_a_song":
-            return redirect(url_for('delete_song')) 
-
-        elif request.form["button"]=="update_a_song":
-            return redirect(url_for('update_song')) 
-           
-    return render_template('artist.html')
 
 @app.route('/add_song')
 def add_song():
@@ -170,7 +217,7 @@ def update_song():
 
     return render_template('update_song.html')   
 
-@app.route('/add_album')
+@app.route('/add_album',methods=['GET', 'POST'])
 def add_album():
 
     return render_template('add_album.html') 
