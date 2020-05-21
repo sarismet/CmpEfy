@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
         integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='view_all_everything.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='view_all_artist.css') }}">
     <script type="text/javascript" src="{{ url_for('static', filename='smooth-scroll.js') }}"></script>
 
     </script>
@@ -42,10 +42,9 @@
 
                         <form method="POST" id="login" class="input-group">
                             <p class="text">Write the name of artist</p>
-                            <input type="text" class="input-field" name="username_of_listener" placeholder="Username"
+                            <input type="text" class="input-field" name="username_of_artist" placeholder="Username"
                                 required>
-                            <input type="text" class="input-field" name="email_of_listener" placeholder="E-mail"
-                                required>
+                            <input type="text" class="input-field" name="email_of_artist" placeholder="E-mail" required>
                             <button type=" submit" method="listener" name="button" value="listener"
                                 class="btn-submit">Search</button>
 

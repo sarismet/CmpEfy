@@ -121,7 +121,7 @@ def listener():
             return redirect(url_for('view_a_song_with_specific_genre')) 
 
         elif request.form["button"]=="Search_a_keyword":
-            return redirect(url_for('Search_a_keyword')) 
+            return redirect(url_for('search_a_keyword')) 
 
         elif request.form["button"]=="view_partners":
             return redirect(url_for('view_partners')) 
@@ -194,6 +194,30 @@ def view_all_everything():
 def view_all_artist():
 
     return render_template('view_all_artist.html')  
+
+@app.route('/view_others_liked_song')
+def view_others_liked_song():
+
+    return render_template('view_others_liked_songs.html')  
+
+@app.route('/view_popular_song_of_an_artist')
+def view_popular_song_of_an_artist():
+
+    return render_template('view_all_popular_artist.html')  
+
+
+@app.route('/view_a_song_with_specific_genre')
+def view_a_song_with_specific_genre():
+
+    return render_template('view_a_song_with_specific_genre.html')  
+
+
+@app.route('/search_a_keyword')
+def search_a_keyword():
+
+    return render_template('search_a_keyword.html')  
+
+    
 
 if __name__ == '__main__':
     app.run(port=5000,debug=True)
