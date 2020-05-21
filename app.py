@@ -101,7 +101,35 @@ def login():
 
 @app.route('/listener',methods=['GET', 'POST'])
 def listener():
+    if request.method == 'POST':
+        if request.form["button"]=="view_all_everything":
+            return redirect(url_for('view_all_everything')) 
+
+        elif request.form["button"]=="view_all_everything_of_artist":
+            return redirect(url_for('view_all_everything_of_artist')) 
+
+        elif request.form["button"]=="view_others_liked_song":
+            return redirect(url_for('view_others_liked_song')) 
+
+        elif request.form["button"]=="view_popular_song_of_an_artist":
+            return redirect(url_for('view_popular_song_of_an_artist')) 
+
+        elif request.form["button"]=="rank_artists":
+            return redirect(url_for('rank_artists')) 
+
+        elif request.form["button"]=="view_a_song_with_specific_genre":
+            return redirect(url_for('view_a_song_with_specific_genre')) 
+
+        elif request.form["button"]=="Search_a_keyword":
+            return redirect(url_for('Search_a_keyword')) 
+
+        elif request.form["button"]=="view_partners":
+            return redirect(url_for('view_partners')) 
+
+        
     return render_template('listener.html')
+
+
 
 
 @app.route('/artist',methods=['GET', 'POST'])
@@ -156,6 +184,11 @@ def delete_album():
 def update_album():
 
     return render_template('update_album.html')   
+
+@app.route('/view_all_everything')
+def view_all_everything():
+
+    return render_template('view_all_everything.html')   
 
 
 if __name__ == '__main__':
