@@ -106,7 +106,7 @@ def listener():
             return redirect(url_for('view_all_everything')) 
 
         elif request.form["button"]=="view_all_everything_of_artist":
-            return redirect(url_for('view_all_everything_of_artist')) 
+            return redirect(url_for('view_all_artist')) 
 
         elif request.form["button"]=="view_others_liked_song":
             return redirect(url_for('view_others_liked_song')) 
@@ -190,6 +190,10 @@ def view_all_everything():
 
     return render_template('view_all_everything.html')   
 
+@app.route('/view_all_artist')
+def view_all_artist():
+
+    return render_template('view_all_artist.html')  
 
 if __name__ == '__main__':
     app.run(port=5000,debug=True)
