@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
         integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='delete_song.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='update_song.css') }}">
 
 </head>
 
@@ -24,11 +24,11 @@
                 Welcome Artist</p>
 
             <form method="POST" id="login" class="input-group">
-                <p class="text">Delete an album</p>
+                <p class="text">Update a song</p>
 
-                <input type="text" class="input-field" name="ID_of_song" placeholder="ID of album" required>
+                <input type="text" class="input-field" name="id_of_song" placeholder="id of song" required>
 
-                <input type="text" class="input-field" name="new_title_of_album" placeholder="new title of song"
+                <input type="text" class="input-field" name="new_title_of_song" placeholder="new title of song"
                     required>
                 <button type=" submit" name="button" value="update_song" class="btn-submit">Update</button>
 

@@ -15,12 +15,6 @@ import sqlite3
 DATABASE = "Artist_Listener.db"
 
 
-class Artist:
-    def __init__(self, name, surname):
-        self.name = name
-        self.surname = surname
-        self.goal = {}
-
 
 def get_db():
     db = sqlite3.connect(DATABASE)
@@ -35,13 +29,38 @@ def query_db(query, args=(), one=False):
     return (rv[0] if rv else None) if one else rv
 
 
+def updating_album():
+    albumid=str(session["properties"]["id_of_album"])
+    new_genre_of_album=str(session["properties"]["new_genre_of_album"])
+    new_title_of_album=str(session["properties"]["new_title_of_album"])
+
+
+    sql_command="UPDATE Artists SET genre = "+new_genre_of_album+", title "+new_title_of_album+" WHERE id = "+albumid
+    db = get_db()
+    db.cursor().execute(sql_command)
+    db.commit()
+
+def updating_song():
+    songid=str(session["properties"]["id_of_song"])
+    new_title_of_song=str(session["properties"]["new_title_of_song"])
+
+
+    sql_update_query = """Update Songs set title = ? where id = ?"""
+    data=(new_title_of_song,songid)
+    db = get_db()
+    db.cursor().execute(sql_update_query,data)
+    db.commit()
+
+
+    
+
 def insert_album(likes=0):
 
-    name = str(session["artist"]["name"])
-    surname = str(session["artist"]["surname"])
-    id = int(session["artist"]["name"]["goal"]["id_of_album"])
-    genre = str(session["artist"]["name"]["goal"]["genre_of_album"])
-    title = str(session["artist"]["name"]["goal"]["title_of_album"])
+    name = str(session["user"][1])
+    surname = str(session["user"][2])
+    id = int(session["properties"]["albumid"])
+    genre = str(session["properties"]["albumgenre"])
+    title = str(session["properties"]["albumtitle"])
 
     sqlite_insert_with_param = """INSERT INTO Albums
                           (id,genre,title,likes,listsofsongs)
@@ -63,19 +82,26 @@ def insert_album(likes=0):
     db.commit()
 
 
-def insert_song(album_id, id, title, likes=0):
+def insert_song(likes=0):
+    
+    id=session["properties"]["songid"]
+    album_id=session["properties"]["which_album"]
+    title=session["properties"]["songtitle"]
 
     sqlite_insert_with_param = """INSERT INTO Songs
-                          (id,title,likes)
-                          VALUES (?,?,?);"""
+                          (id,title,likes,albumid)
+                          VALUES (?,?,?,?);"""
     songs_table = "songs"+str(album_id)
-    sqlite_insert_with_param_2 = "INSERT INTO" + \
+    sqlite_insert_with_param_2 = "INSERT INTO " + \
         songs_table+"(idofsong) VALUES (?);"
-    data_tuple = (id, title, likes)
+    data_tuple = (id, title, likes,album_id)
     db = get_db()
     db.cursor().execute(sqlite_insert_with_param, data_tuple)
-    db.cursor().execute(sqlite_insert_with_param_2, (songs_table))
+    db.cursor().execute(sqlite_insert_with_param_2, (id))
     db.commit()
+
+def update_song(album_id, id, title, likes=0):
+    pass
 
 
 def insert_artist(name, surname):
@@ -129,7 +155,7 @@ def create_table():
 
     db.cursor().execute('''
     CREATE TABLE IF NOT EXISTS Songs(id INT NOT NULL,
-    title VARCHAR(100) NOT NULL, likes INT
+    title VARCHAR(100) NOT NULL, likes INT, albumid INT NOT NULL
     );
     ''')
 
@@ -141,184 +167,205 @@ app.secret_key = "ismetsari"
 app.static_folder = 'static'
 create_table()
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-
+  
     if request.method == 'POST':
-        if request.form["button"] == "listener":
-            userN = query_db('select * from Listeners where email = ? and username = ?', [
-                             request.form['email_of_listener'], request.form['username_of_listener']], one=True)
+        if request.form["button"]=="listener":
+            userN = query_db('select * from Listeners where email = ? and username = ?', [request.form['email_of_listener'], request.form['username_of_listener']], one=True)
             if userN is None:
-                insert_listener(
-                    request.form['email_of_listener'], request.form['username_of_listener'])
-            session['user'] = ["listener", request.form['email_of_listener'],
-                               request.form['username_of_listener']]
+                insert_listener(request.form['email_of_listener'],request.form['username_of_listener'])
+            session['user']=["listener",request.form['email_of_listener'],request.form['username_of_listener']]
 
-            return redirect(url_for('listener'))
+            return redirect(url_for('listener')) 
+                
+        elif request.form["button"]=="artist":
+            user = query_db('select * from Artists where name = ? and surname = ?', [request.form['name_of_artist'], request.form['surname_of_artist']], one=True)
+            if user is None:
+                insert_artist(request.form['name_of_artist'],request.form['surname_of_artist'])
 
-        elif request.form["button"] == "artist":
-            userN = query_db('select * from Artists where name = ? and surname = ?', [
-                request.form['name_of_artist'], request.form['surname_of_artist']], one=True)
-            if userN is None:
-                insert_artist(
-                    request.form['name_of_artist'], request.form['surname_of_artist'])
-            session.pop("artist", None)
-            user = Artist(request.form['name_of_artist'],
-                          request.form['surname_of_artist'])
-            session['artist'] = user.__dict__
-            return redirect(url_for('artist'))
+            
+
+            session['user']=["artist",request.form['name_of_artist'],request.form['surname_of_artist']]
+            return redirect(url_for('artist')) 
     return render_template('login.html')
 
 
-@app.route('/artist', methods=['GET', 'POST'])
+@app.route('/artist',methods=['GET', 'POST'])
 def artist():
-    if "artist" in session:
-
+    if "user" in session:
         if request.method == 'POST':
-            if request.form["button"] == "add_a_song":
+            if request.form["button"]=="add_a_song":
+                session["goal"]="add_song"
+                return redirect(url_for('add_song')) 
+            elif request.form["button"]=="add_an_album":
 
-                return redirect(url_for('add_song'))
-            elif request.form["button"] == "add_an_album":
+                session["goal"]="add_album"
+                
 
-                session["artist"]["goal"] = {"name_of_goal": "add_album"}
+                return redirect(url_for('add_album')) 
 
-                return redirect(url_for('add_album'))
+            elif request.form["button"]=="delete_an_album":
+                return redirect(url_for('delete_album')) 
 
-            elif request.form["button"] == "delete_an_album":
+            elif request.form["button"]=="delete_a_song":
+                return redirect(url_for('delete_song')) 
 
-                return redirect(url_for('delete_album'))
 
-            elif request.form["button"] == "update_an_album":
+            elif request.form["button"]=="update_an_album":
+                session["goal"]="update_album"
+                return redirect(url_for('update_album')) 
 
-                return redirect(url_for('update_album'))
 
-            elif request.form["button"] == "delete_a_song":
-
-                return redirect(url_for('delete_song'))
-
-            elif request.form["button"] == "update_a_song":
-
-                return redirect(url_for('update_song'))
-
+            elif request.form["button"]=="update_a_song":
+                session["goal"]="update_song"
+                return redirect(url_for('update_song')) 
+            
         return render_template('artist.html')
 
-
-@app.route('/listener', methods=['GET', 'POST'])
+@app.route('/listener',methods=['GET', 'POST'])
 def listener():
-    if "listener" in session:
+    if "user" in session:
         if request.method == 'POST':
-            if request.form["button"] == "view_all_everything":
-                return redirect(url_for('view_all_everything'))
+            if request.form["button"]=="view_all_everything":
+                return redirect(url_for('view_all_everything')) 
 
-            elif request.form["button"] == "view_all_everything_of_artist":
-                return redirect(url_for('view_all_artist'))
+            elif request.form["button"]=="view_all_everything_of_artist":
+                return redirect(url_for('view_all_artist')) 
 
-            elif request.form["button"] == "view_others_liked_song":
-                return redirect(url_for('view_others_liked_song'))
+            elif request.form["button"]=="view_others_liked_song":
+                return redirect(url_for('view_others_liked_song')) 
 
-            elif request.form["button"] == "view_popular_song_of_an_artist":
-                return redirect(url_for('view_popular_song_of_an_artist'))
+            elif request.form["button"]=="view_popular_song_of_an_artist":
+                return redirect(url_for('view_popular_song_of_an_artist')) 
 
-            elif request.form["button"] == "rank_artists":
-                return redirect(url_for('rank_artists'))
+            elif request.form["button"]=="rank_artists":
+                return redirect(url_for('rank_artists')) 
 
-            elif request.form["button"] == "view_a_song_with_specific_genre":
-                return redirect(url_for('view_a_song_with_specific_genre'))
+            elif request.form["button"]=="view_a_song_with_specific_genre":
+                return redirect(url_for('view_a_song_with_specific_genre')) 
 
-            elif request.form["button"] == "Search_a_keyword":
-                return redirect(url_for('search_a_keyword'))
+            elif request.form["button"]=="Search_a_keyword":
+                return redirect(url_for('search_a_keyword')) 
 
-            elif request.form["button"] == "view_partners":
-                return redirect(url_for('view_partners'))
+            elif request.form["button"]=="view_partners":
+                return redirect(url_for('view_partners')) 
 
+            
         return render_template('listener.html')
 
 
-@app.route('/add_song')
+
+
+
+
+@app.route('/add_song',methods=['GET', 'POST'])
 def add_song():
 
-    if "add_song" in session:
+    if "add_song" == session["goal"]:
+        if request.method == 'POST':
+            session["properties"]={"songid":request.form['ID_of_song'],"songtitle":request.form['title_of_song'],"which_album":request.form['which_album']}
+            
+            insert_song()
+
+            return redirect(url_for('artist')) 
+    
+    
+    return render_template('add_song.html')    
+@app.route('/add_album',methods=['GET', 'POST'])
+def add_album():
+
+    if "add_album" == session["goal"]:
         if request.method == 'POST':
 
-            return redirect(url_for('artist'))
-    return render_template('add_song.html')
+            session["properties"]={"albumid":request.form['id_of_album'],"albumgenre":request.form['genre_of_album'],"albumtitle":request.form['title_of_album']}
+            
+            insert_album()
 
+            return redirect(url_for('artist')) 
+
+        return render_template('add_album.html') 
 
 @app.route('/delete_song')
 def delete_song():
 
-    return render_template('delete_song.html')
+    return render_template('delete_song.html')   
 
 
-@app.route('/update_song')
-def update_song():
 
-    return render_template('update_song.html')
-
-
-@app.route('/add_album', methods=['GET', 'POST'])
-def add_album():
-
-    if "artist" in session:
-        print('This is standard output',
-              session["artist"]["goal"]["name_of_goal"], file=sys.stdout)
-        if "add_album" == session["artist"].goal["the_of_purpose"]:
-
-            if request.method == 'POST':
-
-                return redirect(url_for('artist'))
-
-        return render_template('add_album.html')
 
 
 @app.route('/delete_album')
 def delete_album():
 
-    return render_template('delete_album.html')
+    return render_template('delete_album.html')   
 
-
-@app.route('/update_album')
+@app.route('/update_album',methods=['GET', 'POST'])
 def update_album():
 
-    return render_template('update_album.html')
+    if "update_album" == session["goal"]:
+        if request.method == 'POST':
+
+            session["properties"]={"albumid":request.form['id_of_album'],"new_genre_of_album":request.form['new_genre_of_album'],"new_title_of_album":request.form['new_title_of_album']}
+            
+            updating_album()
+
+            return redirect(url_for('artist')) 
+
+        return render_template('update_album.html')   
+
+@app.route('/update_song',methods=['GET', 'POST'])
+def update_song():
+
+    if "update_song" == session["goal"]:
+        if request.method == 'POST':
+
+            session["properties"]={"id_of_song":request.form['id_of_song'],"new_title_of_song":request.form['new_title_of_song']}
+            
+            updating_song()
+
+            return redirect(url_for('artist')) 
+
+        return render_template('update_song.html')   
+
+
+
+
 
 
 @app.route('/view_all_everything')
 def view_all_everything():
 
-    return render_template('view_all_everything.html')
-
+    return render_template('view_all_everything.html')   
 
 @app.route('/view_all_artist')
 def view_all_artist():
 
-    return render_template('view_all_artist.html')
-
+    return render_template('view_all_artist.html')  
 
 @app.route('/view_others_liked_song')
 def view_others_liked_song():
 
-    return render_template('view_others_liked_songs.html')
-
+    return render_template('view_others_liked_songs.html')  
 
 @app.route('/view_popular_song_of_an_artist')
 def view_popular_song_of_an_artist():
 
-    return render_template('view_all_popular_artist.html')
+    return render_template('view_all_popular_artist.html')  
 
 
 @app.route('/view_a_song_with_specific_genre')
 def view_a_song_with_specific_genre():
 
-    return render_template('view_a_song_with_specific_genre.html')
+    return render_template('view_a_song_with_specific_genre.html')  
 
 
 @app.route('/search_a_keyword')
 def search_a_keyword():
 
-    return render_template('search_a_keyword.html')
+    return render_template('search_a_keyword.html')  
 
+    
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(port=5000,debug=True)
