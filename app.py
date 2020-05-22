@@ -8,105 +8,108 @@ from flask import(
     url_for,
     send_from_directory
 )
-from flask import g
+import sys
 import sqlite3
 
 
-DATABASE="Artist_Listener.db"
+DATABASE = "Artist_Listener.db"
+
+
+class Artist:
+    def __init__(self, name, surname):
+        self.name = name
+        self.surname = surname
+        self.goal = {}
+
+
 def get_db():
-    db=sqlite3.connect(DATABASE)
+    db = sqlite3.connect(DATABASE)
     return db
 
 
-
-
 def query_db(query, args=(), one=False):
-    db=get_db()
+    db = get_db()
     cur = db.cursor().execute(query, args)
     rv = cur.fetchall()
     cur.close()
     return (rv[0] if rv else None) if one else rv
 
 
+def insert_album(likes=0):
 
-
-    
-
-
-def insert_album(current_session,likes=0):
-
-    name=str(current_session[1])
-    surname=str(current_session[2])
-    id=int(current_session[3])
-    genre=str(current_session[4])
-    title=str(current_session[5])
-
+    name = str(session["artist"]["name"])
+    surname = str(session["artist"]["surname"])
+    id = int(session["artist"]["name"]["goal"]["id_of_album"])
+    genre = str(session["artist"]["name"]["goal"]["genre_of_album"])
+    title = str(session["artist"]["name"]["goal"]["title_of_album"])
 
     sqlite_insert_with_param = """INSERT INTO Albums
                           (id,genre,title,likes,listsofsongs)
                           VALUES (?,?,?,?,?);"""
-    listsofsongs=name+surname+"songs"
-    data_tuple = (id,genre,title,likes,listsofsongs)
-    db=get_db()
+    listsofsongs = "songs"+str(id)
+    data_tuple = (id, genre, title, likes, listsofsongs)
+    db = get_db()
     db.cursor().execute(sqlite_insert_with_param, data_tuple)
-    
-    string="CREATE TABLE IF NOT EXISTS "+listsofsongs+" (idofsong INT NOT NULL);"
+
+    string = "CREATE TABLE IF NOT EXISTS " + \
+        listsofsongs+" (idofsong INT NOT NULL);"
     db.cursor().execute(string)
 
-    listsofalbums=str(name)+str(surname)+"listsofalbums"
-    
-    sql_commad = "INSERT INTO "+listsofalbums+"(idofalbum) VALUES ("+str(id)+");"
+    listsofalbumsofartist = str(name)+str(surname)+"listsofalbums"
+
+    sql_commad = "INSERT INTO "+listsofalbumsofartist + \
+        "(idofalbum) VALUES ("+str(id)+");"
     db.cursor().execute(sql_commad)
     db.commit()
 
 
-def insert_song(id,title,likes,album_id):
-    
+def insert_song(album_id, id, title, likes=0):
 
     sqlite_insert_with_param = """INSERT INTO Songs
                           (id,title,likes)
                           VALUES (?,?,?);"""
-    songs_table=str(album_id)+"songs"
-    sqlite_insert_with_param_2 = "INSERT INTO"+songs_table+"(idofsong) VALUES (?);"
-    data_tuple = (id,title,likes)
-    db=get_db()
+    songs_table = "songs"+str(album_id)
+    sqlite_insert_with_param_2 = "INSERT INTO" + \
+        songs_table+"(idofsong) VALUES (?);"
+    data_tuple = (id, title, likes)
+    db = get_db()
     db.cursor().execute(sqlite_insert_with_param, data_tuple)
-    db.cursor().execute(sqlite_insert_with_param_2, (id))
+    db.cursor().execute(sqlite_insert_with_param_2, (songs_table))
     db.commit()
 
-def insert_artist(name,surname):
-    
+
+def insert_artist(name, surname):
 
     sqlite_insert_with_param = """INSERT INTO Artists
-                          (name, surname,listsofalbums) 
+                          (name, surname,listsofalbums)
                           VALUES (?, ?,?);"""
-    listsofalbums=str(name)+str(surname)+"listsofalbums"
-    data_tuple = (name, surname,listsofalbums)
-    db=get_db()
+    listsofalbums = str(name)+str(surname)+"listsofalbums"
+    data_tuple = (name, surname, listsofalbums)
+    db = get_db()
     db.cursor().execute(sqlite_insert_with_param, data_tuple)
-    string="CREATE TABLE IF NOT EXISTS "+listsofalbums+" (idofalbum INT NOT NULL);"
+    string = "CREATE TABLE IF NOT EXISTS " + \
+        listsofalbums+" (idofalbum INT NOT NULL);"
     db.cursor().execute(string)
     db.commit()
 
 
-def insert_listener(email,username):
-    
+def insert_listener(email, username):
 
     sqlite_insert_with_param = """INSERT INTO Listeners
-                          (email, username,listsoflikedsongs) 
+                          (email, username,listsoflikedsongs)
                           VALUES (?, ?,?);"""
-    listsoflikedsongs=str(username)+"likedsongs"
-    data_tuple = (email, username,listsoflikedsongs)
-    db=get_db()
+    listsoflikedsongs = str(username)+"likedsongs"
+    data_tuple = (email, username, listsoflikedsongs)
+    db = get_db()
     db.cursor().execute(sqlite_insert_with_param, data_tuple)
-    string="CREATE TABLE IF NOT EXISTS "+listsoflikedsongs+" (idofsong INT NOT NULL);"
+    string = "CREATE TABLE IF NOT EXISTS " + \
+        listsoflikedsongs+" (idofsong INT NOT NULL);"
     db.cursor().execute(string)
     db.commit()
-
 
 
 def create_table():
-    db=get_db()
+    db = get_db()
     db.cursor().execute('''
     CREATE TABLE IF NOT EXISTS Artists(name VARCHAR(20) NOT NULL,
     surname VARCHAR(20) NOT NULL,listsofalbums VARCHAR(45) NOT NULL
@@ -138,163 +141,184 @@ app.secret_key = "ismetsari"
 app.static_folder = 'static'
 create_table()
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-  
+
     if request.method == 'POST':
-        if request.form["button"]=="listener":
-            userN = query_db('select * from Listeners where email = ? and username = ?', [request.form['email_of_listener'], request.form['username_of_listener']], one=True)
+        if request.form["button"] == "listener":
+            userN = query_db('select * from Listeners where email = ? and username = ?', [
+                             request.form['email_of_listener'], request.form['username_of_listener']], one=True)
             if userN is None:
-                insert_listener(request.form['email_of_listener'],request.form['username_of_listener'])
-            session['user']=["listener",request.form['email_of_listener'],request.form['username_of_listener']]
+                insert_listener(
+                    request.form['email_of_listener'], request.form['username_of_listener'])
+            session['user'] = ["listener", request.form['email_of_listener'],
+                               request.form['username_of_listener']]
 
-            return redirect(url_for('listener')) 
-                
-        elif request.form["button"]=="artist":
-            user = query_db('select * from Artists where name = ? and surname = ?', [request.form['name_of_artist'], request.form['surname_of_artist']], one=True)
-            if user is None:
-                insert_artist(request.form['name_of_artist'],request.form['surname_of_artist'])
+            return redirect(url_for('listener'))
 
-            session['user']=["artist",request.form['name_of_artist'],request.form['surname_of_artist']]
-            return redirect(url_for('artist')) 
+        elif request.form["button"] == "artist":
+            userN = query_db('select * from Artists where name = ? and surname = ?', [
+                request.form['name_of_artist'], request.form['surname_of_artist']], one=True)
+            if userN is None:
+                insert_artist(
+                    request.form['name_of_artist'], request.form['surname_of_artist'])
+            session.pop("artist", None)
+            user = Artist(request.form['name_of_artist'],
+                          request.form['surname_of_artist'])
+            session['artist'] = user.__dict__
+            return redirect(url_for('artist'))
     return render_template('login.html')
 
 
-@app.route('/artist',methods=['GET', 'POST'])
+@app.route('/artist', methods=['GET', 'POST'])
 def artist():
-    if "user" in session:
+    if "artist" in session:
+
         if request.method == 'POST':
-            if request.form["button"]=="add_a_song":
-                return redirect(url_for('add_song')) 
-            elif request.form["button"]=="add_an_album":
-                
+            if request.form["button"] == "add_a_song":
 
-                return redirect(url_for('add_album')) 
+                return redirect(url_for('add_song'))
+            elif request.form["button"] == "add_an_album":
 
-            elif request.form["button"]=="delete_an_album":
-                return redirect(url_for('delete_album')) 
+                session["artist"]["goal"] = {"name_of_goal": "add_album"}
 
-            elif request.form["button"]=="update_an_album":
-                return redirect(url_for('update_album')) 
+                return redirect(url_for('add_album'))
 
-            elif request.form["button"]=="delete_a_song":
-                return redirect(url_for('delete_song')) 
+            elif request.form["button"] == "delete_an_album":
 
-            elif request.form["button"]=="update_a_song":
-                return redirect(url_for('update_song')) 
-            
+                return redirect(url_for('delete_album'))
+
+            elif request.form["button"] == "update_an_album":
+
+                return redirect(url_for('update_album'))
+
+            elif request.form["button"] == "delete_a_song":
+
+                return redirect(url_for('delete_song'))
+
+            elif request.form["button"] == "update_a_song":
+
+                return redirect(url_for('update_song'))
+
         return render_template('artist.html')
 
-@app.route('/listener',methods=['GET', 'POST'])
+
+@app.route('/listener', methods=['GET', 'POST'])
 def listener():
-    if "user" in session:
+    if "listener" in session:
         if request.method == 'POST':
-            if request.form["button"]=="view_all_everything":
-                return redirect(url_for('view_all_everything')) 
+            if request.form["button"] == "view_all_everything":
+                return redirect(url_for('view_all_everything'))
 
-            elif request.form["button"]=="view_all_everything_of_artist":
-                return redirect(url_for('view_all_artist')) 
+            elif request.form["button"] == "view_all_everything_of_artist":
+                return redirect(url_for('view_all_artist'))
 
-            elif request.form["button"]=="view_others_liked_song":
-                return redirect(url_for('view_others_liked_song')) 
+            elif request.form["button"] == "view_others_liked_song":
+                return redirect(url_for('view_others_liked_song'))
 
-            elif request.form["button"]=="view_popular_song_of_an_artist":
-                return redirect(url_for('view_popular_song_of_an_artist')) 
+            elif request.form["button"] == "view_popular_song_of_an_artist":
+                return redirect(url_for('view_popular_song_of_an_artist'))
 
-            elif request.form["button"]=="rank_artists":
-                return redirect(url_for('rank_artists')) 
+            elif request.form["button"] == "rank_artists":
+                return redirect(url_for('rank_artists'))
 
-            elif request.form["button"]=="view_a_song_with_specific_genre":
-                return redirect(url_for('view_a_song_with_specific_genre')) 
+            elif request.form["button"] == "view_a_song_with_specific_genre":
+                return redirect(url_for('view_a_song_with_specific_genre'))
 
-            elif request.form["button"]=="Search_a_keyword":
-                return redirect(url_for('search_a_keyword')) 
+            elif request.form["button"] == "Search_a_keyword":
+                return redirect(url_for('search_a_keyword'))
 
-            elif request.form["button"]=="view_partners":
-                return redirect(url_for('view_partners')) 
+            elif request.form["button"] == "view_partners":
+                return redirect(url_for('view_partners'))
 
-            
         return render_template('listener.html')
-
-
-
-
 
 
 @app.route('/add_song')
 def add_song():
 
-    if "user" in session:
-        return render_template('add_song.html')    
+    if "add_song" in session:
+        if request.method == 'POST':
+
+            return redirect(url_for('artist'))
+    return render_template('add_song.html')
+
 
 @app.route('/delete_song')
 def delete_song():
 
-    return render_template('delete_song.html')   
+    return render_template('delete_song.html')
+
 
 @app.route('/update_song')
 def update_song():
 
-    return render_template('update_song.html')   
+    return render_template('update_song.html')
 
-@app.route('/add_album',methods=['GET', 'POST'])
+
+@app.route('/add_album', methods=['GET', 'POST'])
 def add_album():
 
-    if "user" in session:
-        if request.method == 'POST':
-            
-            session["user"].append(request.form["id_of_album"])
-            session["user"].append(request.form["genre_of_album"])
-            session["user"].append(request.form["title_of_album"])
+    if "artist" in session:
+        print('This is standard output',
+              session["artist"]["goal"]["name_of_goal"], file=sys.stdout)
+        if "add_album" == session["artist"].goal["the_of_purpose"]:
 
-            insert_album(session["user"])
-            return redirect(url_for('artist')) 
+            if request.method == 'POST':
 
-        return render_template('add_album.html') 
+                return redirect(url_for('artist'))
+
+        return render_template('add_album.html')
+
 
 @app.route('/delete_album')
 def delete_album():
 
-    return render_template('delete_album.html')   
+    return render_template('delete_album.html')
+
 
 @app.route('/update_album')
 def update_album():
 
-    return render_template('update_album.html')   
+    return render_template('update_album.html')
+
 
 @app.route('/view_all_everything')
 def view_all_everything():
 
-    return render_template('view_all_everything.html')   
+    return render_template('view_all_everything.html')
+
 
 @app.route('/view_all_artist')
 def view_all_artist():
 
-    return render_template('view_all_artist.html')  
+    return render_template('view_all_artist.html')
+
 
 @app.route('/view_others_liked_song')
 def view_others_liked_song():
 
-    return render_template('view_others_liked_songs.html')  
+    return render_template('view_others_liked_songs.html')
+
 
 @app.route('/view_popular_song_of_an_artist')
 def view_popular_song_of_an_artist():
 
-    return render_template('view_all_popular_artist.html')  
+    return render_template('view_all_popular_artist.html')
 
 
 @app.route('/view_a_song_with_specific_genre')
 def view_a_song_with_specific_genre():
 
-    return render_template('view_a_song_with_specific_genre.html')  
+    return render_template('view_a_song_with_specific_genre.html')
 
 
 @app.route('/search_a_keyword')
 def search_a_keyword():
 
-    return render_template('search_a_keyword.html')  
+    return render_template('search_a_keyword.html')
 
-    
 
 if __name__ == '__main__':
-    app.run(port=5000,debug=True)
+    app.run(port=5000, debug=True)
