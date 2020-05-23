@@ -61,12 +61,12 @@ def insert_album(likes=0):
     id = int(session["properties"]["albumid"])
     genre = str(session["properties"]["albumgenre"])
     title = str(session["properties"]["albumtitle"])
-
+    creator=str(session["properties"]["creator"])
     sqlite_insert_with_param = """INSERT INTO Albums
-                          (id,genre,title,likes,listsofsongs)
-                          VALUES (?,?,?,?,?);"""
+                          (id,genre,title,likes,listsofsongs,creator)
+                          VALUES (?,?,?,?,?,?);"""
     listsofsongs = "songs"+str(id)
-    data_tuple = (id, genre, title, likes, listsofsongs)
+    data_tuple = (id, genre, title, likes, listsofsongs,creator)
     db = get_db()
     db.cursor().execute(sqlite_insert_with_param, data_tuple)
 
@@ -87,17 +87,18 @@ def insert_song(likes=0):
     id=session["properties"]["songid"]
     album_id=session["properties"]["which_album"]
     title=session["properties"]["songtitle"]
+    creator=session["properties"]["creator"]
+
 
     sqlite_insert_with_param = """INSERT INTO Songs
-                          (id,title,likes,albumid)
-                          VALUES (?,?,?,?);"""
+                          (id,title,likes,albumid,creator)
+                          VALUES (?,?,?,?,?);"""
     songs_table = "songs"+str(album_id)
-    sqlite_insert_with_param_2 = "INSERT INTO " + \
-        songs_table+"(idofsong) VALUES (?);"
-    data_tuple = (id, title, likes,album_id)
+    sqlite_insert_with_param_2 = "INSERT INTO {} (idofsong) VALUES ({});".format(songs_table,id)
+    data_tuple = (id, title, likes,album_id,creator)
     db = get_db()
     db.cursor().execute(sqlite_insert_with_param, data_tuple)
-    db.cursor().execute(sqlite_insert_with_param_2, (id))
+    db.cursor().execute(sqlite_insert_with_param_2)
     db.commit()
 
 def update_song(album_id, id, title, likes=0):
@@ -149,13 +150,13 @@ def create_table():
 
     db.cursor().execute('''
     CREATE TABLE IF NOT EXISTS Albums(id INT NOT NULL,
-    genre VARCHAR(20) NOT NULL , title VARCHAR(20) , likes INT , listsofsongs VARCHAR(25)
+    genre VARCHAR(20) NOT NULL , title VARCHAR(20) , likes INT , listsofsongs VARCHAR(25), creator TEXT NOT NULL
     );
     ''')
 
     db.cursor().execute('''
     CREATE TABLE IF NOT EXISTS Songs(id INT NOT NULL,
-    title VARCHAR(100) NOT NULL, likes INT, albumid INT NOT NULL
+    title VARCHAR(100) NOT NULL, likes INT, albumid INT NOT NULL,creator TEXT NOT NULL
     );
     ''')
 
@@ -194,6 +195,7 @@ def login():
 @app.route('/artist',methods=['GET', 'POST'])
 def artist():
     if "user" in session:
+        name=session["user"][1]+" "+session["user"][2]
         if request.method == 'POST':
             if request.form["button"]=="add_a_song":
                 session["goal"]="add_song"
@@ -221,7 +223,7 @@ def artist():
                 session["goal"]="update_song"
                 return redirect(url_for('update_song')) 
             
-        return render_template('artist.html')
+        return render_template('artist.html',Artist_name=name)
 
 @app.route('/listener',methods=['GET', 'POST'])
 def listener():
@@ -270,7 +272,8 @@ def add_song():
 
     if "add_song" == session["goal"]:
         if request.method == 'POST':
-            session["properties"]={"songid":request.form['ID_of_song'],"songtitle":request.form['title_of_song'],"which_album":request.form['which_album']}
+            creator=session['user'][1]+session['user'][2]
+            session["properties"]={"songid":request.form['ID_of_song'],"songtitle":request.form['title_of_song'],"which_album":request.form['which_album'],"creator":creator}
             
             insert_song()
 
@@ -283,8 +286,8 @@ def add_album():
 
     if "add_album" == session["goal"]:
         if request.method == 'POST':
-
-            session["properties"]={"albumid":request.form['id_of_album'],"albumgenre":request.form['genre_of_album'],"albumtitle":request.form['title_of_album']}
+            creator=session['user'][1]+session['user'][2]
+            session["properties"]={"albumid":request.form['id_of_album'],"albumgenre":request.form['genre_of_album'],"albumtitle":request.form['title_of_album'],"creator":creator}
             
             insert_album()
 
@@ -363,7 +366,8 @@ def view_all_everything():
         rows=db.cursor().execute("select * from Artists").fetchall()
         my_artist_array=[]
         for row in rows:
-            my_artist_array.append(row[1])
+            name=row[0]+" "+row[1]
+            my_artist_array.append(name)
             print('This is row output in Artists', row,file=sys.stdout)
 
     return render_template('view_all_everything.html',my_song_li=my_song_array,my_album_di=my_album_dict,my_artist_li=my_artist_array)   
