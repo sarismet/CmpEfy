@@ -246,6 +246,7 @@ def listener():
                 return redirect(url_for('rank_artists')) 
 
             elif request.form["button"]=="view_a_song_with_specific_genre":
+                session["goal"]="view_a_song_with_specific_genre"
                 return redirect(url_for('view_a_song_with_specific_genre')) 
 
             elif request.form["button"]=="Search_a_keyword":
@@ -418,6 +419,43 @@ def view_all_artist():
 
     return render_template('view_all_artist.html')  
 
+
+
+@app.route('/view_a_song_with_specific_genre',methods=['GET', 'POST'])
+def view_a_song_with_specific_genre():
+    if "view_a_song_with_specific_genre" == session["goal"]:
+        if request.method == 'POST':
+            db=get_db()
+            
+
+            the_type=request.form["genre_of_song"]
+
+            sql_cmd="select listsofsongs from Albums WHERE genre = '"+the_type+"'"
+             
+            data=(the_type)
+            
+            specificsongs=db.cursor().execute(sql_cmd).fetchall()
+            print("specificsongs is" ,specificsongs ,file=sys.stdout) 
+
+            stx="select idofsong from "+specificsongs[0][0]
+            
+            songids=db.cursor().execute(stx).fetchall()
+            print("songids is" ,songids ,file=sys.stdout) 
+            songstitles=[]
+            for i in songids:
+                print("i is" ,i ,file=sys.stdout)
+                sql_cmd="select title from Songs where id = "+str(i[0])
+                
+                songstitle=db.cursor().execute(sql_cmd).fetchall()
+                songstitles.append(songstitle[0][0])
+
+            
+            return render_template('view_a_song_with_specific_genre.html',songs=songstitles)  
+
+
+    return render_template('view_a_song_with_specific_genre.html')  
+
+
 @app.route('/view_others_liked_song')
 def view_others_liked_song():
 
@@ -428,11 +466,6 @@ def view_popular_song_of_an_artist():
 
     return render_template('view_all_popular_artist.html')  
 
-
-@app.route('/view_a_song_with_specific_genre')
-def view_a_song_with_specific_genre():
-
-    return render_template('view_a_song_with_specific_genre.html')  
 
 
 @app.route('/search_a_keyword')

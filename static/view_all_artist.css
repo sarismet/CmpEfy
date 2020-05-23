@@ -154,6 +154,7 @@ p {
     margin: 5px, 5px;
     border-left: 0;
     border-top: 0;
+    text-align: center;
     border-right: 0;
     border-bottom: 1px solid #999;
     outline: none;
