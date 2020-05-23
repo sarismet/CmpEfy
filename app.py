@@ -105,13 +105,14 @@ def update_song(album_id, id, title, likes=0):
     pass
 
 
-def insert_artist(name, surname):
+def insert_artist(name, surname,likes=0):
 
     sqlite_insert_with_param = """INSERT INTO Artists
-                          (name, surname,listsofalbums)
+                          (name_surname,listsofalbums,likes)
                           VALUES (?, ?,?);"""
     listsofalbums = str(name)+str(surname)+"listsofalbums"
-    data_tuple = (name, surname, listsofalbums)
+    name_surname=str(name)+str(surname)
+    data_tuple = (name_surname, listsofalbums,likes)
     db = get_db()
     db.cursor().execute(sqlite_insert_with_param, data_tuple)
     string = "CREATE TABLE IF NOT EXISTS " + \
@@ -138,25 +139,24 @@ def insert_listener(email, username):
 def create_table():
     db = get_db()
     db.cursor().execute('''
-    CREATE TABLE IF NOT EXISTS Artists(name VARCHAR(20) NOT NULL,
-    surname VARCHAR(20) NOT NULL,listsofalbums VARCHAR(45) NOT NULL
+    CREATE TABLE IF NOT EXISTS Artists(name_surname TEXT NOT NULL,listsofalbums VARCHAR(45) NOT NULL,likes INT NOT NULL
     );
     ''')
     db.cursor().execute('''
-    CREATE TABLE IF NOT EXISTS Listeners(email VARCHAR(100) NOT NULL,
-    username VARCHAR(20) NOT NULL,listsoflikedsongs VARCHAR(35) NOT NULL
+    CREATE TABLE IF NOT EXISTS Listeners(email TEXT NOT NULL,
+    username TEXT NOT NULL,listsoflikedsongs TEXT NOT NULL
     );
     ''')
 
     db.cursor().execute('''
     CREATE TABLE IF NOT EXISTS Albums(id INT NOT NULL,
-    genre VARCHAR(20) NOT NULL , title VARCHAR(20) , likes INT , listsofsongs VARCHAR(25), creator TEXT NOT NULL
+    genre TEXT NOT NULL , title TEXT , likes INT , listsofsongs TEXT, creator TEXT NOT NULL
     );
     ''')
 
     db.cursor().execute('''
     CREATE TABLE IF NOT EXISTS Songs(id INT NOT NULL,
-    title VARCHAR(100) NOT NULL, likes INT, albumid INT NOT NULL,creator TEXT NOT NULL
+    title TEXT NOT NULL, likes INT, albumid INT NOT NULL,creator TEXT NOT NULL
     );
     ''')
 
@@ -181,7 +181,8 @@ def login():
             return redirect(url_for('listener')) 
                 
         elif request.form["button"]=="artist":
-            user = query_db('select * from Artists where name = ? and surname = ?', [request.form['name_of_artist'], request.form['surname_of_artist']], one=True)
+            name_surname=str(request.form['name_of_artist'])+str(request.form['surname_of_artist'])
+            user = query_db('select * from Artists where name_surname = ?', [name_surname], one=True)
             if user is None:
                 insert_artist(request.form['name_of_artist'],request.form['surname_of_artist'])
 
@@ -256,7 +257,10 @@ def listener():
 
             elif request.form["button"]=="view_partners":
                 return redirect(url_for('view_partners')) 
+
             elif request.form["button"]=="like_album_or_song":
+                session["goal"]="like_album_or_song"
+
                 return redirect(url_for('like_album_or_song')) 
 
             
@@ -478,8 +482,54 @@ def search_a_keyword():
     return render_template('search_a_keyword.html')  
 
     
-@app.route('/like_album_or_song')
+@app.route('/like_album_or_song',methods=['GET', 'POST'])
 def like_album_or_song():
+    if request.method == 'POST':
+        if request.form["button"]=="song":
+            username=session["user"][2]
+            songid=request.form["songid"]
+            sql_command="UPDATE Songs SET likes = likes+1 WHERE id = {}".format(songid)
+
+            db=get_db()
+
+            c=db.cursor()
+            c.execute(sql_command)
+            db.commit()
+        
+
+            sql_cmd="select * from Songs WHERE id = {}".format(songid)
+                
+
+            
+            specificsongs=db.cursor().execute(sql_cmd).fetchall()
+
+            adbumid=specificsongs[0][3]
+            creator=specificsongs[0][4]
+
+            sql_command="UPDATE Albums SET likes = likes+1 WHERE id = {}".format(adbumid)
+            c.execute(sql_command)
+
+            sql_cmd="select listsoflikedsongs from Listeners WHERE username = '{}'".format(username)
+            listsoflikedsongs=db.cursor().execute(sql_cmd).fetchall()[0][0]
+
+
+
+            sql_command="INSERT INTO {} (idofsong) VALUES ({})".format(listsoflikedsongs,songid)
+            c.execute(sql_command)
+            db.commit()
+
+
+            sql_command="UPDATE Artists SET likes = likes+1 WHERE name_surname = '{}'".format(creator)
+            c.execute(sql_command)
+            db.commit()
+
+
+
+            
+
+
+        elif request.form["button"]=="album":
+            pass
 
     return render_template('like_album_or_song.html')  
 
