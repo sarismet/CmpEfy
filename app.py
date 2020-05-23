@@ -228,6 +228,8 @@ def listener():
     if "user" in session:
         if request.method == 'POST':
             if request.form["button"]=="view_all_everything":
+                session["goal"]="view_all_everything"
+
                 return redirect(url_for('view_all_everything')) 
 
             elif request.form["button"]=="view_all_everything_of_artist":
@@ -250,6 +252,8 @@ def listener():
 
             elif request.form["button"]=="view_partners":
                 return redirect(url_for('view_partners')) 
+            elif request.form["button"]=="like_album_or_song":
+                return redirect(url_for('like_album_or_song')) 
 
             
         return render_template('listener.html')
@@ -335,8 +339,32 @@ def update_song():
 
 @app.route('/view_all_everything')
 def view_all_everything():
+    if "view_all_everything" == session["goal"]:
+        db=get_db()
+        
+        rows=db.cursor().execute("select * from Songs").fetchall()
+        print('This is row output in Songs', rows,file=sys.stdout)
+        my_song_array=[]
+        
+        for row in rows:
 
-    return render_template('view_all_everything.html')   
+            my_song_array.append(row[1])
+            
+            print('This is row output in songs', row,file=sys.stdout)
+
+        rows=db.cursor().execute("select * from Albums").fetchall()
+        my_album_dict=[]
+        for row in rows:
+            my_album_dict.append({"genre":row[1],"title":row[2]})
+            print('This is row output in Albums', row,file=sys.stdout)
+
+        rows=db.cursor().execute("select * from Artists").fetchall()
+        my_artist_array=[]
+        for row in rows:
+            my_artist_array.append(row[1])
+            print('This is row output in Artists', row,file=sys.stdout)
+
+    return render_template('view_all_everything.html',my_song_li=my_song_array,my_album_di=my_album_dict,my_artist_li=my_artist_array)   
 
 @app.route('/view_all_artist')
 def view_all_artist():
@@ -366,6 +394,11 @@ def search_a_keyword():
     return render_template('search_a_keyword.html')  
 
     
+@app.route('/like_album_or_song')
+def like_album_or_song():
+
+    return render_template('like_album_or_song.html')  
+
 
 if __name__ == '__main__':
     app.run(port=5000,debug=True)

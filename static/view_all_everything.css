@@ -21,7 +21,9 @@ body {
 .flex-container {
     display: flex;
 }
-
+p {
+    text-align: left;
+  }
 
 
 .interest {

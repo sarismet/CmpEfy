@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Tap Music</title>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+        integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='script.js') }}"></script>
+
+</head>
+
+<body>
+    <div class="app">
+
+        <div class="form-box">
+            <p class="text">Like a song or an album.</p>
+            <div class="bottom-box">
+
+                <div id="btn"></div>
+                <button type="button" class="toggle-btn" id="1" onclick="login()">Listener</button>
+                <button type="button" class="toggle-btn" id="2" onclick="register()">Artist</button>
+
+            </div>
+            <div class="social-icons">
+                <a href="https://www.instagram.com/sarismet.py/?hl=tr" target="_blank"> <i
+                        class="fab fa-instagram"></i></a>
+                <a href="https://www.facebook.com/yahubiroyun" target="_blank"> <i
+                        class="fab fa-facebook-square"></i></a>
+
+                <a href="https://twitter.com/sarismet2825" target="_blank">
+                    <i class="fab fa-twitter"></i>
+                </a>
+
+
+            </div>
+
+            <form method="POST" id="login" class="input-group">
+                <p class="text">Like Song.</p>
+                <input type="text" class="input-field" name="songid" placeholder="The id of song" required>
+                <button type="submit" class="btn-submit" name="button" value="song">Like</button>
+
+            </form>
+            <form method="POST" id="register" class="input-group">
+                <p class="text">Like Album.</p>
+                <input type="text" class="input-field" name="albumid" placeholder="The id of album" required>
+                <button type="submit" class="btn-submit" name="button" value="album">Like</button>
+
+            </form>
+
+        </div>
+        <script type="text/javascript" src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+
+</html>
