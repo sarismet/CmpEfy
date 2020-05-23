@@ -143,6 +143,10 @@ p.text {
     justify-content: space-between;
     align-items: center;
 }
+p {
+    text-align: left;
+    padding-left: 25px;
+  }
 
 
 .input-field {

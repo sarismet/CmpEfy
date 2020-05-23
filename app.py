@@ -233,6 +233,7 @@ def listener():
                 return redirect(url_for('view_all_everything')) 
 
             elif request.form["button"]=="view_all_everything_of_artist":
+                session["goal"]="view_all_artist"
                 return redirect(url_for('view_all_artist')) 
 
             elif request.form["button"]=="view_others_liked_song":
@@ -366,8 +367,54 @@ def view_all_everything():
 
     return render_template('view_all_everything.html',my_song_li=my_song_array,my_album_di=my_album_dict,my_artist_li=my_artist_array)   
 
-@app.route('/view_all_artist')
+@app.route('/view_all_artist',methods=['GET', 'POST'])
 def view_all_artist():
+    if "view_all_artist" == session["goal"]:
+        if request.method == 'POST':
+            db=get_db()
+
+            name=request.form['name']
+            surname=request.form['surname']
+
+            sql_cmd="select listsofalbums from Artists where name = ? and surname = ?"
+            data=(name,surname)
+            albumplace=db.cursor().execute(sql_cmd,data).fetchall()
+
+            print("albumplace is" ,albumplace ,file=sys.stdout)  
+            
+            take_all_albumsid="select * from "+albumplace[0][0]
+
+            albumsids=db.cursor().execute(take_all_albumsid).fetchall()
+
+            print("albumsids is" ,albumsids ,file=sys.stdout)  
+
+            array_of_albums=[]
+            for row in albumsids:
+                print("row is" ,row[0] ,file=sys.stdout)  
+                st="select * from Albums where id = "+str(row[0])
+                
+                albumproperty=db.cursor().execute(st).fetchall()
+
+                array_of_albums.append({"genre":albumproperty[0][1],"title":albumproperty[0][2]})
+
+                songplace=str(albumproperty[0][4])
+
+                stx="select idofsong from "+songplace
+
+                songids=db.cursor().execute(stx).fetchall()
+                print("songids is" ,songids ,file=sys.stdout) 
+                songstitles=[]
+                for i in songids:
+                    print("i is" ,i ,file=sys.stdout)
+                    sql_cmd="select title from Songs where id = "+str(i[0])
+                    
+                    songstitle=db.cursor().execute(sql_cmd).fetchall()
+                    songstitles.append(songstitle[0][0])
+
+            return render_template('view_all_artist.html',songslist=songstitles,albums=array_of_albums)  
+
+            
+                
 
     return render_template('view_all_artist.html')  
 
