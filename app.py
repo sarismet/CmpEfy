@@ -20,16 +20,6 @@ db = mysql.connector.connect(
 c = db.cursor()
 
 
-def get_db():
-    db = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        passwd="sarismet",
-        database="Artist_Listener"
-    )
-    return db
-
-
 def updating_album():
     albumid = str(session["properties"]["id_of_album"])
     new_genre_of_album = str(session["properties"]["new_genre_of_album"])
@@ -37,8 +27,8 @@ def updating_album():
 
     sql_command = "UPDATE Artists SET genre = "+new_genre_of_album + \
         ", title "+new_title_of_album+" WHERE id = "+albumid
-    db = get_db()
-    db.cursor().execute(sql_command)
+
+    c.execute(sql_command)
     db.commit()
 
 
@@ -48,8 +38,8 @@ def updating_song():
 
     sql_update_query = """Update Songs set title = %s where id = %s"""
     data = (new_title_of_song, songid)
-    db = get_db()
-    db.cursor().execute(sql_update_query, data)
+
+    c.execute(sql_update_query, data)
     db.commit()
 
 
@@ -66,54 +56,67 @@ def insert_album(likes=0):
                           VALUES (%s,%s,%s,%s,%s,%s);"""
     listsofsongs = "songs"+str(id)
     data_tuple = (id, genre, title, likes, listsofsongs, creator)
-    db = get_db()
-    db.cursor().execute(sqlite_insert_with_param, data_tuple)
+
+    c.execute(sqlite_insert_with_param, data_tuple)
 
     string = "CREATE TABLE IF NOT EXISTS " + \
         listsofsongs+" (idofsong INT NOT NULL);"
-    db.cursor().execute(string)
+    c.execute(string)
 
     listsofalbumsofartist = str(name)+str(surname)+"listsofalbums"
 
     sql_commad = "INSERT INTO "+listsofalbumsofartist + \
         "(idofalbum) VALUES ("+str(id)+");"
-    db.cursor().execute(sql_commad)
+    c.execute(sql_commad)
     db.commit()
 
 
-def insert_song(likes=0):
+def insert_song(mutual, likes=0):
 
     id = session["properties"]["songid"]
     album_id = session["properties"]["which_album"]
     title = session["properties"]["songtitle"]
     creator = session["properties"]["creator"]
+    asistant_artist = "no"
+    if mutual is True:
+        asistant_artist = session["properties"]["asistant_artist"]
 
     sqlite_insert_with_param = """INSERT INTO Songs
-                          (id,title,likes,albumid,creator)
-                          VALUES (%s,%s,%s,%s,%s);"""
+                          (id,title,likes,albumid,creator,asistant_artist)
+                          VALUES (%s,%s,%s,%s,%s,%s);"""
     songs_table = "songs"+str(album_id)
     sqlite_insert_with_param_2 = "INSERT INTO {} (idofsong) VALUES ({});".format(
         songs_table, id)
-    data_tuple = (id, title, likes, album_id, creator)
-    db = get_db()
-    db.cursor().execute(sqlite_insert_with_param, data_tuple)
-    db.cursor().execute(sqlite_insert_with_param_2)
+    data_tuple = (id, title, likes, album_id, creator, asistant_artist)
+
+    c.execute(sqlite_insert_with_param, data_tuple)
+    c.execute(sqlite_insert_with_param_2)
+
+    coworker_table = creator+"coworkers"
+    sql_command = "INSERT INTO {} (name) VALUES ('{}')".format(
+        coworker_table, asistant_artist)
+    c.execute(sql_command)
     db.commit()
 
 
 def insert_artist(name, surname, likes=0):
 
     sqlite_insert_with_param = """INSERT INTO Artists
-                          (name_surname,listsofalbums,likes)
-                          VALUES (%s, %s,%s);"""
+                          (name_surname,listsofalbums,likes,coworker)
+                          VALUES (%s, %s,%s,%s);"""
     listsofalbums = str(name)+str(surname)+"listsofalbums"
     name_surname = str(name)+str(surname)
-    data_tuple = (name_surname, listsofalbums, likes)
-    db = get_db()
-    db.cursor().execute(sqlite_insert_with_param, data_tuple)
+    coworker = name_surname+"coworkers"
+    data_tuple = (name_surname, listsofalbums, likes, coworker)
+
+    c.execute(sqlite_insert_with_param, data_tuple)
     string = "CREATE TABLE IF NOT EXISTS " + \
         listsofalbums+" (idofalbum INT NOT NULL);"
-    db.cursor().execute(string)
+    c.execute(string)
+
+    string2 = "CREATE TABLE IF NOT EXISTS " + \
+        coworker+" (name TEXT NOT NULL);"
+    c.execute(string2)
     db.commit()
 
 
@@ -124,17 +127,18 @@ def insert_listener(email, username):
                           VALUES (%s, %s,%s);"""
     listsoflikedsongs = str(username)+"likedsongs"
     data_tuple = (email, username, listsoflikedsongs)
-    db = get_db()
-    db.cursor().execute(sqlite_insert_with_param, data_tuple)
+
+    c.execute(sqlite_insert_with_param, data_tuple)
     string = "CREATE TABLE IF NOT EXISTS " + \
         listsoflikedsongs+" (idofsong INT NOT NULL);"
-    db.cursor().execute(string)
+    c.execute(string)
     db.commit()
 
 
 def create_table():
     c.execute('''
-    CREATE TABLE IF NOT EXISTS Artists(name_surname TEXT NOT NULL,listsofalbums VARCHAR(45) NOT NULL,likes INT NOT NULL
+    CREATE TABLE IF NOT EXISTS Artists(name_surname TEXT NOT NULL,listsofalbums VARCHAR(45) NOT NULL,
+    likes INT NOT NULL,coworker TEXT NOT NULL
     );
     ''')
     c.execute('''
@@ -151,7 +155,7 @@ def create_table():
 
     c.execute('''
     CREATE TABLE IF NOT EXISTS Songs(id INT NOT NULL,
-    title TEXT NOT NULL, likes INT, albumid INT NOT NULL,creator TEXT NOT NULL
+    title TEXT NOT NULL, likes INT, albumid INT NOT NULL,creator TEXT NOT NULL,asistant_artist TEXT NOT NULL
     );
     ''')
 
@@ -161,17 +165,27 @@ def create_table():
 app = Flask(__name__)
 app.secret_key = "ismetsari"
 app.static_folder = 'static'
-create_table()
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    create_table()
 
     if request.method == 'POST':
         if request.form["button"] == "listener":
+            email = str(request.form['email_of_listener'])
+            username = str(request.form['username_of_listener'])
+            query = "SELECT * FROM Listeners where email = '{}' and username = '{}' ".format(
+                email, username)
 
-            insert_listener(
-                request.form['email_of_listener'], request.form['username_of_listener'])
+            c.execute(query)
+
+            row = c.fetchone()
+
+            if row == None:
+                insert_listener(
+                    request.form['email_of_listener'], request.form['username_of_listener'])
+
             session['user'] = ["listener", request.form['email_of_listener'],
                                request.form['username_of_listener']]
 
@@ -179,10 +193,16 @@ def login():
 
         elif request.form["button"] == "artist":
             name_surname = str(
-                request.form['name_of_artist'])+str(request.form['surname_of_artist'])
+                request.form['name_of_artist'])+"_"+str(request.form['surname_of_artist'])
+            query = "SELECT * FROM Artists where name_surname = %s "
 
-            insert_artist(
-                request.form['name_of_artist'], request.form['surname_of_artist'])
+            c.execute(query, (name_surname,))
+
+            row = c.fetchone()
+
+            if row == None:
+                insert_artist(
+                    request.form['name_of_artist'], request.form['surname_of_artist'])
 
             session['user'] = ["artist", request.form['name_of_artist'],
                                request.form['surname_of_artist']]
@@ -266,11 +286,20 @@ def add_song():
 
     if "add_song" == session["goal"]:
         if request.method == 'POST':
-            creator = session['user'][1]+session['user'][2]
-            session["properties"] = {"songid": request.form['ID_of_song'], "songtitle": request.form['title_of_song'],
-                                     "which_album": request.form['which_album'], "creator": creator}
+            mutual = False
+            if request.form["button"] == "add_individual_song":
+                creator = session['user'][1]+session['user'][2]
+                session["properties"] = {"songid": request.form['ID_of_song'], "songtitle": request.form['title_of_song'],
+                                         "which_album": request.form['which_album'], "creator": creator}
 
-            insert_song()
+            elif request.form["button"] == "add_common_song":
+                mutual = True
+                creator = session['user'][1]+session['user'][2]
+                session["properties"] = {"songid": request.form['ID_of_song'], "songtitle": request.form['title_of_song'],
+                                         "which_album": request.form['which_album'],
+                                         "asistant_artist": request.form['name_of_assistant'], "creator": creator}
+
+            insert_song(mutual)
 
             return redirect(url_for('artist'))
 
@@ -340,9 +369,9 @@ def update_song():
 @app.route('/view_all_everything')
 def view_all_everything():
     if "view_all_everything" == session["goal"]:
-        db = get_db()
 
-        rows = db.cursor().execute("select * from Songs").fetchall()
+        c.execute("select * from Songs")
+        rows = c.fetchall()
         print('This is row output in Songs', rows, file=sys.stdout)
         my_song_array = []
 
@@ -352,16 +381,21 @@ def view_all_everything():
 
             print('This is row output in songs', row, file=sys.stdout)
 
-        rows = db.cursor().execute("select * from Albums").fetchall()
+        c.execute("select * from Albums")
+        rows = c.fetchall()
         my_album_dict = []
         for row in rows:
             my_album_dict.append({"genre": row[1], "title": row[2]})
             print('This is row output in Albums', row, file=sys.stdout)
 
-        rows = db.cursor().execute("select * from Artists").fetchall()
+        c.execute("select * from Artists")
+        rows = c.fetchall()
         my_artist_array = []
         for row in rows:
-            name = row[0]+" "+row[1]
+
+            x = row.split("_")
+
+            name = x[0]+" "+x[1]
             my_artist_array.append(name)
             print('This is row output in Artists', row, file=sys.stdout)
 
@@ -372,20 +406,19 @@ def view_all_everything():
 def view_all_artist():
     if "view_all_artist" == session["goal"]:
         if request.method == 'POST':
-            db = get_db()
 
             name = request.form['name']
             surname = request.form['surname']
 
-            sql_cmd = "select listsofalbums from Artists where name = %s and surname = %s"
+            sql_cmd = "select listsofalbums from Artists where name = '%s' and surname = '%s' "
             data = (name, surname)
-            albumplace = db.cursor().execute(sql_cmd, data).fetchall()
+            albumplace = c.execute(sql_cmd, data).fetchall()
 
             print("albumplace is", albumplace, file=sys.stdout)
 
             take_all_albumsid = "select * from "+albumplace[0][0]
 
-            albumsids = db.cursor().execute(take_all_albumsid).fetchall()
+            albumsids = c.execute(take_all_albumsid).fetchall()
 
             print("albumsids is", albumsids, file=sys.stdout)
 
@@ -394,7 +427,7 @@ def view_all_artist():
                 print("row is", row[0], file=sys.stdout)
                 st = "select * from Albums where id = "+str(row[0])
 
-                albumproperty = db.cursor().execute(st).fetchall()
+                albumproperty = c.execute(st).fetchall()
 
                 array_of_albums.append(
                     {"genre": albumproperty[0][1], "title": albumproperty[0][2]})
@@ -403,14 +436,14 @@ def view_all_artist():
 
                 stx = "select idofsong from "+songplace
 
-                songids = db.cursor().execute(stx).fetchall()
+                songids = c.execute(stx).fetchall()
                 print("songids is", songids, file=sys.stdout)
                 songstitles = []
                 for i in songids:
                     print("i is", i, file=sys.stdout)
                     sql_cmd = "select title from Songs where id = "+str(i[0])
 
-                    songstitle = db.cursor().execute(sql_cmd).fetchall()
+                    songstitle = c.execute(sql_cmd).fetchall()
                     songstitles.append(songstitle[0][0])
 
             return render_template('view_all_artist.html', songslist=songstitles, albums=array_of_albums)
@@ -422,27 +455,24 @@ def view_all_artist():
 def view_a_song_with_specific_genre():
     if "view_a_song_with_specific_genre" == session["goal"]:
         if request.method == 'POST':
-            db = get_db()
 
             the_type = request.form["genre_of_song"]
 
             sql_cmd = "select listsofsongs from Albums WHERE genre = '"+the_type+"'"
 
-            data = (the_type)
-
-            specificsongs = db.cursor().execute(sql_cmd).fetchall()
+            specificsongs = c.execute(sql_cmd).fetchall()
             print("specificsongs is", specificsongs, file=sys.stdout)
 
             stx = "select idofsong from "+specificsongs[0][0]
 
-            songids = db.cursor().execute(stx).fetchall()
+            songids = c.execute(stx).fetchall()
             print("songids is", songids, file=sys.stdout)
             songstitles = []
             for i in songids:
                 print("i is", i, file=sys.stdout)
                 sql_cmd = "select title from Songs where id = "+str(i[0])
 
-                songstitle = db.cursor().execute(sql_cmd).fetchall()
+                songstitle = c.execute(sql_cmd).fetchall()
                 songstitles.append(songstitle[0][0])
 
             return render_template('view_a_song_with_specific_genre.html', songs=songstitles)
@@ -477,15 +507,13 @@ def like_album_or_song():
             sql_command = "UPDATE Songs SET likes = likes+1 WHERE id = {}".format(
                 songid)
 
-            db = get_db()
-
-            c = db.cursor()
+            c = c
             c.execute(sql_command)
             db.commit()
 
             sql_cmd = "select * from Songs WHERE id = {}".format(songid)
 
-            specificsongs = db.cursor().execute(sql_cmd).fetchall()
+            specificsongs = c.execute(sql_cmd).fetchall()
 
             adbumid = specificsongs[0][3]
             creator = specificsongs[0][4]
@@ -496,7 +524,7 @@ def like_album_or_song():
 
             sql_cmd = "select listsoflikedsongs from Listeners WHERE username = '{}'".format(
                 username)
-            listsoflikedsongs = db.cursor().execute(sql_cmd).fetchall()[0][0]
+            listsoflikedsongs = c.execute(sql_cmd).fetchall()[0][0]
 
             sql_command = "INSERT INTO {} (idofsong) VALUES ({})".format(
                 listsoflikedsongs, songid)

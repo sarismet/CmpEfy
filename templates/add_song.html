@@ -13,7 +13,8 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
         integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='add_song.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+
 
 </head>
 
@@ -21,19 +22,40 @@
     <div class="app">
         <div class="form-box">
             <p class="text">
-                Welcome Artist</p>
+                Welcome {{Artist}}</p>
+
+            <div class="bottom-box">
+
+                <div id="btn"></div>
+                <button type="button" class="toggle-btn" id="1" onclick="login()">Individual</button>
+                <button type="button" class="toggle-btn" id="2" onclick="register()">Common</button>
+
+            </div>
 
             <form method="POST" id="login" class="input-group">
-                <p class="text">Add a song</p>
+                <p class="text">Add individual Song</p>
                 <input type="text" class="input-field" name="title_of_song" placeholder="title of song" required>
                 <input type="text" class="input-field" name="ID_of_song" placeholder="ID of song" required>
                 <input type="text" class="input-field" name="which_album" placeholder="which album is it added into?"
                     required>
-                <button type=" submit" name="button" value="add_song" class="btn-submit">Add</button>
+                <button type=" submit" name="button" value="add_individual_song" class="btn-submit">Add</button>
 
             </form>
+            <form method="POST" id="register" class="input-group">
+                <p class="text">Add Command Song</p>
 
+
+                <input type="text" class="input-field" name="title_of_song" placeholder="title of song" required>
+                <input type="text" class="input-field" name="ID_of_song" placeholder="ID of song" required>
+                <input type="text" class="input-field" name="which_album" placeholder="which album is it added into?"
+                    required>
+                <input type="text" class="input-field" name="name_of_assistant" placeholder="name of assistant"
+                    required>
+                <button type=" submit" name="button" value="add_common_song" class="btn-submit">Add</button>
+
+            </form>
         </div>
+        <script type="text/javascript" src="{{ url_for('static', filename='script.js') }}"></script>
 
 
 
