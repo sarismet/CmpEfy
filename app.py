@@ -91,11 +91,11 @@ def insert_song(mutual, likes=0):
 
     c.execute(sqlite_insert_with_param, data_tuple)
     c.execute(sqlite_insert_with_param_2)
-
-    coworker_table = creator+"coworkers"
-    sql_command = "INSERT INTO {} (name) VALUES ('{}')".format(
-        coworker_table, asistant_artist)
-    c.execute(sql_command)
+    if asistant_artist != "no":
+        coworker_table = creator+"coworkers"
+        sql_command = "INSERT INTO {} (name) VALUES ('{}')".format(
+            coworker_table, asistant_artist)
+        c.execute(sql_command)
     db.commit()
 
 
@@ -105,7 +105,7 @@ def insert_artist(name, surname, likes=0):
                           (name_surname,listsofalbums,likes,coworker)
                           VALUES (%s, %s,%s,%s);"""
     listsofalbums = str(name)+str(surname)+"listsofalbums"
-    name_surname = str(name)+str(surname)
+    name_surname = str(name)+"_"+str(surname)
     coworker = name_surname+"coworkers"
     data_tuple = (name_surname, listsofalbums, likes, coworker)
 
@@ -182,6 +182,8 @@ def login():
 
             row = c.fetchone()
 
+            print("ROW BURDA ", file=sys.stdout)
+
             if row == None:
                 insert_listener(
                     request.form['email_of_listener'], request.form['username_of_listener'])
@@ -199,7 +201,7 @@ def login():
             c.execute(query, (name_surname,))
 
             row = c.fetchone()
-
+            print("ROW BURDA ", row, file=sys.stdout)
             if row == None:
                 insert_artist(
                     request.form['name_of_artist'], request.form['surname_of_artist'])
@@ -271,6 +273,7 @@ def listener():
                 return redirect(url_for('search_a_keyword'))
 
             elif request.form["button"] == "view_partners":
+                session["goal"] = "view_partners"
                 return redirect(url_for('view_partners'))
 
             elif request.form["button"] == "like_album_or_song":
@@ -538,6 +541,29 @@ def like_album_or_song():
             pass
 
     return render_template('like_album_or_song.html')
+
+
+@app.route('/view_partners', methods=['GET', 'POST'])
+def view_partners():
+    if request.method == 'POST':
+        if request.form["button"] == "search":
+            name = request.form["name_of_artist"]
+            surname = request.form["surname_of_artist"]
+
+            coworker_table_name = name+surname+"coworkers"
+
+            sql_cmd = "SELECT name From "+coworker_table_name
+
+            c.execute(sql_cmd)
+
+            rows = c.fetchall()
+            name_of_partners = []
+            for row in rows:
+                name_of_partners.append(row[0])
+
+            return render_template('view_partners.html', partners=name_of_partners)
+
+    return render_template('view_partners.html')
 
 
 if __name__ == '__main__':
