@@ -15,7 +15,7 @@ db = mysql.connector.connect(
     host="localhost",
     user="root",
     passwd="sarismet",
-    database="Artist_Listener"
+    database="mydb"
 )
 c = db.cursor()
 
@@ -538,19 +538,18 @@ def like_album_or_song():
             db.commit()
         elif request.form["button"] == "album":
             albumid = request.form["albumid"]
-            table_liked_songs = str(session["user"][1])+"likedsongs"
-            sql_trigger = """CREATE TRIGGER Sour_trigger UPDATE OF likes ON Albums 
-                    BEGIN
-                        INSERT INTO {} (idofsongs) SELECT id FROM Songs Where albumid = {}
-                        UPDATE Songs SET likes = (likes + 1) WHERE albumid = {};
-                        UPDATE Artists SET likes = (likes + 1) WHERE name IN (SELECT creator From Songs Where albumid = {}) ;
-                    END;""".format(table_liked_songs, albumid, albumid, albumid)
+            table_liked_songs = str(session["user"][2])+"likedsongs"
 
-            c.execute(sql_trigger)
-            db.commit()
+            f=open("file.txt","r")
+            sql_trigger=""
+            lines=f.read()
+            
+
+            c.execute(lines)
+
             query = "UPDATE Albums set likes = (likes + (select count(*) from Songs where albumid = {})); ".format(
                 albumid)
-            c.execute(query)
+            #c.execute(query)
             db.commit()
 
     return render_template('like_album_or_song.html')

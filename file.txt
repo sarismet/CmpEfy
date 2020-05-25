@@ -1,0 +1,10 @@
+DELIMITER $$
+CREATE TRIGGER mytrigger ON Albums AFTER UPDATE 
+AS
+BEGIN
+INSERT INTO sarismetlikedsongs (idofsongs) SELECT id FROM Songs Where albumid = 701;
+UPDATE Songs SET likes = (likes + 1) WHERE albumid = 701;
+UPDATE Artists SET likes = (likes + 1) WHERE name IN (SELECT creator From Songs Where albumid = 701) ;
+END;
+$$
+DELIMITER ;
