@@ -510,7 +510,6 @@ def like_album_or_song():
             sql_command = "UPDATE Songs SET likes = likes+1 WHERE id = {}".format(
                 songid)
 
-            c = c
             c.execute(sql_command)
             db.commit()
 
@@ -538,7 +537,21 @@ def like_album_or_song():
             c.execute(sql_command)
             db.commit()
         elif request.form["button"] == "album":
-            pass
+            albumid = request.form["albumid"]
+            table_liked_songs = str(session["user"][1])+"likedsongs"
+            sql_trigger = """CREATE TRIGGER Sour_trigger UPDATE OF likes ON Albums 
+                    BEGIN
+                        INSERT INTO {} (idofsongs) SELECT id FROM Songs Where albumid = {}
+                        UPDATE Songs SET likes = (likes + 1) WHERE albumid = {};
+                        UPDATE Artists SET likes = (likes + 1) WHERE name IN (SELECT creator From Songs Where albumid = {}) ;
+                    END;""".format(table_liked_songs, albumid, albumid, albumid)
+
+            c.execute(sql_trigger)
+            db.commit()
+            query = "UPDATE Albums set likes = (likes + (select count(*) from Songs where albumid = {})); ".format(
+                albumid)
+            c.execute(query)
+            db.commit()
 
     return render_template('like_album_or_song.html')
 

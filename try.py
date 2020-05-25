@@ -1,36 +1,25 @@
-"""import sqlite3
+"""import mysql.connector
 
-DATABASE = "artist_listener.db"
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    passwd="sarismet",
+    database="Artist_Listener"
+)
+c = db.cursor()
 
+guery = "insert into songs701 (idofsong) Select id From Songs where albumid = 701 ;"
 
+c.execute(guery)
 
-db = sqlite3.connect(DATABASE)
-
-
-
-db.cursor().execute('''CREATE TABLE IF NOT EXISTS artists(name TEXT NOT NULL,surname TEXT NOT NULL,listsofalbums TEXT NOT NULL)''')
-
-
-db.cursor().execute('''INSERT INTO artists VALUES("İSMET", 'Alex', "8")''')
 db.commit()
+"""
 
+sql_trigger = """CREATE TRIGGER Sour_trigger UPDATE OF likes ON Albums 
+                    BEGIN
+                        INSERT INTO {} (idofsongs) SELECT id FROM Songs Where albumid = {}
+                        UPDATE Songs SET likes = (likes + 1) WHERE albumid = {};
+                        UPDATE Artists SET likes = (likes + 1) WHERE name IN (SELECT creator From Songs Where albumid = {}) ;
+                    END;""".format(1, 2, 3, 3)
 
-db.cursor().execute("SELECT name FROM artists")
-
-print(db.cursor().fetchall())"""
-
-
-import sqlite3
-
-conn = sqlite3.connect('mysqlite.db')
-c = conn.cursor()
-
-#create table
-c.execute('''CREATE TABLE IF NOT EXISTS artists(name TEXT NOT NULL,surname TEXT NOT NULL,listsofalbums TEXT NOT NULL)''')
-
-c.execute('''INSERT INTO artists VALUES("İSMET", 'Alex', "8")''')
-
-conn.commit()
-
-c.execute("SELECT name FROM artists")
-print(c.fetchall())
+print(sql_trigger)
