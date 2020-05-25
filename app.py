@@ -15,7 +15,7 @@ db = mysql.connector.connect(
     host="localhost",
     user="root",
     passwd="sarismet",
-    database="mydb"
+    database="Artist_Listener"
 )
 c = db.cursor()
 
@@ -390,17 +390,18 @@ def view_all_everything():
         for row in rows:
             my_album_dict.append({"genre": row[1], "title": row[2]})
             print('This is row output in Albums', row, file=sys.stdout)
-
-        c.execute("select * from Artists")
+        db.commit()
+        c.execute("select name_surname from Artists")
         rows = c.fetchall()
+        db.commit()
         my_artist_array = []
+        print('This is rows output in Artists', rows, file=sys.stdout)
         for row in rows:
 
-            x = row.split("_")
+            x = row[0].split("_")
 
             name = x[0]+" "+x[1]
             my_artist_array.append(name)
-            print('This is row output in Artists', row, file=sys.stdout)
 
     return render_template('view_all_everything.html', my_song_li=my_song_array, my_album_di=my_album_dict, my_artist_li=my_artist_array)
 
@@ -539,17 +540,32 @@ def like_album_or_song():
         elif request.form["button"] == "album":
             albumid = request.form["albumid"]
             table_liked_songs = str(session["user"][2])+"likedsongs"
+            c.execute("""DROP TRIGGER IF EXISTS increaselikesofsongs;""")
+            db.commit()
+            sql_cmd = """ CREATE TRIGGER increaselikesofsongs BEFORE UPDATE ON songs701
+                FOR EACH ROW BEGIN
+                
+                UPDATE Songs SET new.likes = (new.likes + 1) WHERE new.id = {};
+             END;""".format(albumid, albumid)
+            c.execute(sql_cmd)
 
-            f=open("file.txt","r")
-            sql_trigger=""
-            lines=f.read()
-            
+            db.commit()
 
-            c.execute(lines)
+            c.execute("""DROP TRIGGER IF EXISTS theothers;""")
+            db.commit()
+            sql_cmd = """ CREATE TRIGGER theothers AFTER UPDATE ON songs701
+                FOR EACH ROW BEGIN
+                IF(new.id = {} ) THEN
+                UPDATE Artists SET new.likes = (new.likes + 1) WHERE name IN (SELECT creator From Songs Where new.id = {} ) ;
+                INSERT INTO {} (idofsong) SELECT id FROM Songs Where new.id = {}; 
+                END IF; END;""".format(albumid, albumid, table_liked_songs, albumid)
+            c.execute(sql_cmd)
 
-            query = "UPDATE Albums set likes = (likes + (select count(*) from Songs where albumid = {})); ".format(
+            db.commit()
+
+            query = "UPDATE songs701 set likes = (likes + (select count(*) from Songs where albumid = {})); ".format(
                 albumid)
-            #c.execute(query)
+            c.execute(query)
             db.commit()
 
     return render_template('like_album_or_song.html')
