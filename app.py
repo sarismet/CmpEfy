@@ -15,7 +15,7 @@ db = mysql.connector.connect(
     host="localhost",
     user="root",
     passwd="sarismet",
-    database="Artist_Listener"
+    database="mydb"
 )
 c = db.cursor()
 
@@ -60,7 +60,7 @@ def insert_album(likes=0):
     c.execute(sqlite_insert_with_param, data_tuple)
 
     string = "CREATE TABLE IF NOT EXISTS " + \
-        listsofsongs+" (idofsong INT NOT NULL);"
+        listsofsongs+" (songid INT NOT NULL ,creator TEXT NOT NULL ,asistantartist TEXT NOT NULL);"
     c.execute(string)
 
     listsofalbumsofartist = str(name)+str(surname)+"listsofalbums"
@@ -77,24 +77,26 @@ def insert_song(mutual, likes=0):
     album_id = session["properties"]["which_album"]
     title = session["properties"]["songtitle"]
     creator = session["properties"]["creator"]
-    asistant_artist = "no"
+    name=creator.split("_")[0]
+    surname=creator.split("_")[1]
+    asistantartist = "no"
     if mutual is True:
-        asistant_artist = session["properties"]["asistant_artist"]
+        asistantartist = session["properties"]["asistantartist"]
 
     sqlite_insert_with_param = """INSERT INTO Songs
-                          (id,title,likes,albumid,creator,asistant_artist)
+                          (id,title,likes,albumid,creator,asistantartist)
                           VALUES (%s,%s,%s,%s,%s,%s);"""
     songs_table = "songs"+str(album_id)
-    sqlite_insert_with_param_2 = "INSERT INTO {} (idofsong) VALUES ({});".format(
-        songs_table, id)
-    data_tuple = (id, title, likes, album_id, creator, asistant_artist)
+    sqlite_insert_with_param_2 = "INSERT INTO {} (songid,creator,asistantartist) VALUES (%s,%s,%s);".format(
+        songs_table)
+    data_tuple = (id, title, likes, album_id, creator, asistantartist)
 
     c.execute(sqlite_insert_with_param, data_tuple)
-    c.execute(sqlite_insert_with_param_2)
-    if asistant_artist != "no":
-        coworker_table = creator+"coworkers"
+    c.execute(sqlite_insert_with_param_2,(id,creator,asistantartist,))
+    if asistantartist != "no":
+        coworker_table = name+surname+"coworkers"
         sql_command = "INSERT INTO {} (name) VALUES ('{}')".format(
-            coworker_table, asistant_artist)
+            coworker_table, asistantartist)
         c.execute(sql_command)
     db.commit()
 
@@ -106,7 +108,7 @@ def insert_artist(name, surname, likes=0):
                           VALUES (%s, %s,%s,%s);"""
     listsofalbums = str(name)+str(surname)+"listsofalbums"
     name_surname = str(name)+"_"+str(surname)
-    coworker = name_surname+"coworkers"
+    coworker = str(name)+str(surname)+"coworkers"
     data_tuple = (name_surname, listsofalbums, likes, coworker)
 
     c.execute(sqlite_insert_with_param, data_tuple)
@@ -155,7 +157,7 @@ def create_table():
 
     c.execute('''
     CREATE TABLE IF NOT EXISTS Songs(id INT NOT NULL,
-    title TEXT NOT NULL, likes INT, albumid INT NOT NULL,creator TEXT NOT NULL,asistant_artist TEXT NOT NULL
+    title TEXT NOT NULL, likes INT, albumid INT NOT NULL,creator TEXT NOT NULL,asistantartist TEXT NOT NULL
     );
     ''')
 
@@ -291,16 +293,20 @@ def add_song():
         if request.method == 'POST':
             mutual = False
             if request.form["button"] == "add_individual_song":
-                creator = session['user'][1]+session['user'][2]
+                creator = session['user'][1]+"_"+session['user'][2]
                 session["properties"] = {"songid": request.form['ID_of_song'], "songtitle": request.form['title_of_song'],
                                          "which_album": request.form['which_album'], "creator": creator}
 
             elif request.form["button"] == "add_common_song":
                 mutual = True
-                creator = session['user'][1]+session['user'][2]
+                creator = session['user'][1]+"_"+session['user'][2]
+                temp=str(request.form['name_of_assistant'])
+                asistan_name=temp.split(" ")[0]
+                asistan_surname=temp.split(" ")[1]
+                asistantartist=asistan_name+"_"+asistan_surname
                 session["properties"] = {"songid": request.form['ID_of_song'], "songtitle": request.form['title_of_song'],
                                          "which_album": request.form['which_album'],
-                                         "asistant_artist": request.form['name_of_assistant'], "creator": creator}
+                                         "asistantartist":asistantartist , "creator": creator}
 
             insert_song(mutual)
 
@@ -540,33 +546,29 @@ def like_album_or_song():
         elif request.form["button"] == "album":
             albumid = request.form["albumid"]
             table_liked_songs = str(session["user"][2])+"likedsongs"
-            c.execute("""DROP TRIGGER IF EXISTS increaselikesofsongs;""")
+            album_of_songs = "songs"+str(albumid)
+
+            c.execute("""DROP TRIGGER IF EXISTS mytrigger;""")
             db.commit()
-            sql_cmd = """ CREATE TRIGGER increaselikesofsongs BEFORE UPDATE ON songs701
+
+            sql_cmd = """ CREATE TRIGGER mytrigger AFTER UPDATE ON {}
                 FOR EACH ROW BEGIN
-                
-                UPDATE Songs SET new.likes = (new.likes + 1) WHERE new.id = {};
-             END;""".format(albumid, albumid)
+                UPDATE Artists SET likes = (likes + 1) WHERE name_surname = new.creator ;
+                IF( new.asistantartist <> 'no' ) THEN
+                UPDATE Artists SET likes = (likes + 1) WHERE name_surname = new.asistantartist;
+                END IF;
+                INSERT INTO {} (idofsong) VALUES(new.songid); 
+                UPDATE Songs SET likes = (likes + 1) WHERE id = new.songid; 
+                END;""".format(album_of_songs, table_liked_songs)
             c.execute(sql_cmd)
-
+            db.commit()
+            cmd="UPDATE {} SET songid = (songid + 0)".format(album_of_songs)
+            c.execute(cmd)
             db.commit()
 
-            c.execute("""DROP TRIGGER IF EXISTS theothers;""")
-            db.commit()
-            sql_cmd = """ CREATE TRIGGER theothers AFTER UPDATE ON songs701
-                FOR EACH ROW BEGIN
-                IF(new.id = {} ) THEN
-                UPDATE Artists SET new.likes = (new.likes + 1) WHERE name IN (SELECT creator From Songs Where new.id = {} ) ;
-                INSERT INTO {} (idofsong) SELECT id FROM Songs Where new.id = {}; 
-                END IF; END;""".format(albumid, albumid, table_liked_songs, albumid)
-            c.execute(sql_cmd)
 
-            db.commit()
 
-            query = "UPDATE songs701 set likes = (likes + (select count(*) from Songs where albumid = {})); ".format(
-                albumid)
-            c.execute(query)
-            db.commit()
+
 
     return render_template('like_album_or_song.html')
 
