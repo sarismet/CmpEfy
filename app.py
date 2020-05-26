@@ -122,6 +122,7 @@ def insert_artist(name, surname, likes=0):
     db.commit()
 
 
+
 def insert_listener(email, username):
 
     sqlite_insert_with_param = """INSERT INTO Listeners
@@ -136,8 +137,15 @@ def insert_listener(email, username):
     c.execute(string)
     db.commit()
 
+    sql_cmd="INSERT INTO likedsongstablenames (table_names) VALUES (%s);"
+
+    c.execute(sql_cmd,(listsoflikedsongs,))
+
 
 def create_table():
+
+    c.execute('''CREATE TABLE IF NOT EXISTS likedsongstablenames(table_names TEXT NOT NULL);''')
+
     c.execute('''
     CREATE TABLE IF NOT EXISTS Artists(name_surname TEXT NOT NULL,listsofalbums VARCHAR(45) NOT NULL,
     likes INT NOT NULL,coworker TEXT NOT NULL
@@ -229,9 +237,11 @@ def artist():
                 return redirect(url_for('add_album'))
 
             elif request.form["button"] == "delete_an_album":
+                session["goal"] = "delete_album"
                 return redirect(url_for('delete_album'))
 
             elif request.form["button"] == "delete_a_song":
+                session["goal"] = "delete_song"
                 return redirect(url_for('delete_song'))
 
             elif request.form["button"] == "update_an_album":
@@ -337,10 +347,7 @@ def delete_song():
     return render_template('delete_song.html')
 
 
-@app.route('/delete_album')
-def delete_album():
 
-    return render_template('delete_album.html')
 
 
 @app.route('/update_album', methods=['GET', 'POST'])
@@ -595,6 +602,49 @@ def view_partners():
 
     return render_template('view_partners.html')
 
+
+
+
+
+@app.route('/delete_album', methods=['GET', 'POST'])
+def delete_album():
+    if request.method == 'POST':
+        if request.form["button"] == "delete_album":
+            albumid = request.form["id_of_album"]
+
+            q_name="SELECT name_surname FROM Artists WHERE id = {}".format(albumid)
+
+            c.execute(q_name)
+            db.commit()
+
+            row=c.fetchall()
+            name_surname=session["user"][1]+session["user"][2]
+            name_surname_table=row[0][0]
+            if name_surname == str(name_surname_table):
+
+                album_of_songs = "songs"+str(albumid)
+
+                c.execute("""DROP TRIGGER IF EXISTS mytriggertwo;""")
+                db.commit()
+
+                sql_cmd = """ CREATE TRIGGER mytriggertwo AFTER DELETE ON {}
+                    FOR EACH ROW BEGIN
+                    DELETE FROM Songs Where id = old.songid;
+                    DELETE FROM 
+                    END;""".format(album_of_songs)
+                c.execute(sql_cmd)
+                db.commit()
+                cmd = "DELETE FROM {}".format(album_of_songs)
+                c.execute(cmd)
+                db.commit()
+
+                dr="DROP TABLE {}".format(album_of_songs)
+            else:
+                return render_template('login.html')
+
+
+
+    return render_template('delete_album.html')
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
