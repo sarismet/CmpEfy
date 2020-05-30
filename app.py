@@ -306,19 +306,20 @@ def update_album():
     artist_name=session["user"][1]+" "+session["user"][2]
     if request.method == 'POST':
         albumid=request.form['id_of_album']
-        sql="SELECT creator From Songs WHERE id = %s"
+        sql="SELECT creator From Albums WHERE id = %s"
         c.execute(sql,(albumid,))
         row=c.fetchall()
-        creator=row[0]
-        if row[0]==session["user"][1]+"_"+session["user"][2]:
+        creator=row[0][0]
+        if creator==session["user"][1]+"_"+session["user"][2]:
 
-            session["properties"] = {"albumid": request.form['id_of_album'], "new_genre_of_album":
+            session["properties"] = {"id_of_album": request.form['id_of_album'], "new_genre_of_album":
                                         request.form['new_genre_of_album'], "new_title_of_album": request.form['new_title_of_album']}
 
             updating_album()
 
             return redirect(url_for('artist'))
         else:
+            print("hata aldık row[0] is",creator)
             session["ERROR"]="You are not allowed to update this album"
             return redirect(url_for('error'))
 
@@ -334,8 +335,8 @@ def update_song():
             sql="SELECT creator From Songs WHERE id = %s"
             c.execute(sql,(songid,))
             row=c.fetchall()
-            creator=row[0]
-            if row[0]==session["user"][1]+"_"+session["user"][2]:
+            creator=row[0][0]
+            if creator==session["user"][1]+"_"+session["user"][2]:
                 session["properties"] = {"id_of_song": songid,
                                         "new_title_of_song": request.form['new_title_of_song']}
                 updating_song()
@@ -612,8 +613,8 @@ def delete_song():
             sql="SELECT creator From Songs WHERE id = %s"
             c.execute(sql,(songid,))
             row=c.fetchall()
-            creator=row[0]
-            if creator==artist_name:
+            creator=row[0][0]
+            if creator==name+"_"+surname:
                 c.execute("""DROP TRIGGER IF EXISTS deletesongtrigger;""")
                 db.commit()
 
