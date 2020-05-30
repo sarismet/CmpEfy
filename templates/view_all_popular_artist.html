@@ -41,11 +41,11 @@
 
 
                         <form method="POST" id="login" class="input-group">
-                            <p class="text">Write the name of artist</p>
-                            <input type="text" class="input-field" name="username_of_artist" placeholder="Username"
+                            <p class="text">Write the name and surname of artist</p>
+                            <input type="text" class="input-field" name="name_of_artist" placeholder="Name" required>
+                            <input type="text" class="input-field" name="surname_of_artist" placeholder="Surname"
                                 required>
-                            <input type="text" class="input-field" name="email_of_artist" placeholder="E-mail" required>
-                            <button type=" submit" method="listener" name="button" value="listener"
+                            <button type=" submit" method="listener" name="button" value="search"
                                 class="btn-submit">Search</button>
 
                         </form>
@@ -62,15 +62,13 @@
                 <div class="col-md-12">
                     <div class="services-box">
                         <i class="fas fa-cloud"></i><span> Polular Songs</span>
-                        <p>Günümüzde Türkiye sınırları içinde kalan Anadolu Yarımadası, dünyanın en eski yerleşim
-                            bölgelerinden biridir. Çeşitli Eski Anadolu milletleri bölgede, Cilalı Taş Devri'nin
-                            başlangıcına ve Büyük İskender'in fethine kadar varlığını sürdürdü.[7] Bu halkların çoğu
-                            Hint-Avrupa dil ailesinin bir kolu olarak kabul edilen Anadolu dillerini konuştu.[36] Bazı
-                            bilim insanları Hint-Avrupa dillerinin, yine eski Anadolu dillerinden olan Hitit dili ve
-                            Luvi dilinden yayıldığını öne sürdü.[37] Ayrıca Türkiye'nin Avrupa kıtasında kalan bölümünü
-                            oluşturan Doğu Trakya ise kırk bin yıl öncesine dayanan bir yerleşim tarihine sahiptir ve
-
-                        </p>
+                        {% for item in songs %}
+                        <dl>
+                            <dt>
+                                <p> {{item}}</p>
+                            </dt>
+                        </dl>
+                        {% endfor %}
 
                     </div>
                 </div>

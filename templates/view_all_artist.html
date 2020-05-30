@@ -42,8 +42,7 @@
 
                         <form method="POST" id="login" class="input-group">
                             <p class="text">Write the name of artist</p>
-                            <input type="text" class="input-field" name="name" placeholder="Name"
-                                required>
+                            <input type="text" class="input-field" name="name" placeholder="Name" required>
                             <input type="text" class="input-field" name="surname" placeholder="Surname" required>
                             <button type=" submit" method="listener" name="button" value="search"
                                 class="btn-submit">Search</button>
@@ -64,7 +63,9 @@
                         <i class="fas fa-cloud"></i><span> All Songs</span>
                         {% for item in songslist %}
                         <dl>
-                            <dt><p> {{item}}</p></dt>
+                            <dt>
+                                <p> {{item}}</p>
+                            </dt>
                         </dl>
                         {% endfor %}
 
@@ -75,7 +76,9 @@
                         <i class="fas fa-code"></i><span> All Albums</span>
                         {% for item in albums %}
                         <dl>
-                            <dt><p> {{item["title"]}}- {{item["genre"]}}</p></dt>
+                            <dt>
+                                <p> {{item}}</p>
+                            </dt>
                         </dl>
                         {% endfor %}
 

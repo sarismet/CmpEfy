@@ -43,7 +43,9 @@
 
                         {% for item in my_song_li %}
                         <dl>
-                            <dt><p> {{item}}</p></dt>                   
+                            <dt>
+                                <p> {{item}}</p>
+                            </dt>
                         </dl>
                         {% endfor %}
                     </div>
@@ -53,17 +55,21 @@
                         <i class="fas fa-code"></i><span> All Albums</span>
                         {% for item in my_album_di %}
                         <dl>
-                            <dt><p> {{item["title"]}}- {{item["genre"]}} </p></dt>
+                            <dt>
+                                <p> {{item["title"]}} - {{item["genre"]}} </p>
+                            </dt>
                         </dl>
                         {% endfor %}
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="services-box">
-                        <i class="fas fa-chart-line"></i><span> All Songs </span>
+                        <i class="fas fa-chart-line"></i><span> All Artists </span>
                         {% for item in my_artist_li %}
                         <dl>
-                            <dt><p> {{item}}</p></dt>
+                            <dt>
+                                <p> {{item["name"]}} - {{item["surname"]}} </p>
+                            </dt>
                         </dl>
                         {% endfor %}
                     </div>

@@ -1,3 +1,9 @@
+@import url('https://fonts.googleapis.com/css?family=Kaushan+Script|Molle:400i|Uncial+Antiqua|Zhi+Mang+Xing&display=swap');
+@import url("https://fonts.googleapis.com/css?family=Acme|Lobster|Patua+One|Rubik|Sniglet|Lora|Raleway");
+@import url('https://fonts.googleapis.com/css?family=Italianno|Lusitana|Six+Caps|Varela+Round|ZCOOL+QingKe+HuangYou&display=swap');
+@import url("https://fonts.googleapis.com/css?family=Acme|Lobster|Patua+One|Rubik|Sniglet|Lora|Raleway");
+@import url('https://fonts.googleapis.com/css?family=Italianno|Lusitana|Six+Caps|Varela+Round|ZCOOL+QingKe+HuangYou&display=swap');
+
 body {
     margin: 0;
     padding: 0;
@@ -82,7 +88,12 @@ body {
     display: flex;
 }
 
+h1.text-center {
+    font-family: 'Caveat', cursive;
+    font-size: 45px;
 
+    text-align: center;
+}
 
 .interest {
     padding-top: 50px;
@@ -197,8 +208,6 @@ footer {
     padding-top: 10px;
 }
 
-@import url("https://fonts.googleapis.com/css?family=Acme|Lobster|Patua+One|Rubik|Sniglet|Lora|Raleway");
-@import url('https://fonts.googleapis.com/css?family=Italianno|Lusitana|Six+Caps|Varela+Round|ZCOOL+QingKe+HuangYou&display=swap');
 
 .saas {
     position: absolute;
@@ -437,4 +446,13 @@ footer .column a>i {
 
 footer .column a+a {
     padding: 0 0.5em;
+}
+
+.text-center {
+
+    font-family: 'Caveat', cursive;
+    font-size: 45px;
+
+    text-align: center;
+
 }

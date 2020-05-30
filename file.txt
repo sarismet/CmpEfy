@@ -1,3 +1,0 @@
-CREATE TRIGGER mytrigger BEFORE UPDATE ON Albums FOR EACH ROW BEGIN
-UPDATE Songs SET likes = (likes + 1) WHERE albumid = 701;
-END;

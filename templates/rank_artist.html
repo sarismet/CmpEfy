@@ -35,46 +35,12 @@
         <div class="container text-center" id="header">
 
 
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-12 ">
-
-
-                        <form method="POST" id="login" class="input-group">
-                            <p class="text">Write the ID of listener</p>
-                            <input type="text" class="input-field" name="username_of_other" placeholder="Username"
-                                required>
-                            <button type=" submit" method="listener" name="button" value="compare"
-                                class="btn-submit">Compare</button>
-
-                        </form>
-
-
-                    </div>
-
-                </div>
-            </div>
-
-
 
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-12">
                     <div class="services-box">
-                        <i class="fas fa-cloud"></i><span>Songs You Have Liked</span>
-                        {% for item in yourlists %}
-                        <dl>
-                            <dt>
-                                <p> {{item}}</p>
-                            </dt>
-                        </dl>
-                        {% endfor %}
-
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="services-box">
-                        <i class="fas fa-code"></i><span>Songs S/He Have Liked</span>
-                        {% for item in otherslists %}
+                        <i class="fas fa-cloud"></i><span> Polular Artists</span>
+                        {% for item in artists %}
                         <dl>
                             <dt>
                                 <p> {{item}}</p>
