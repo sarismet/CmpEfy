@@ -384,8 +384,8 @@ def view_all_artist():
         name = request.form['name']
         surname = request.form['surname']
         artist_name=name+"_"+surname
-        sql_cmd = "select title from Albums where creator = %s "
-        c.execute(sql_cmd,(artist_name,))
+        sql_cmd = "select title from Albums where creator = %s or asistantartist = %s "
+        c.execute(sql_cmd,(artist_name,artist_name,))
         rows = c.fetchall()
         db.commit()            
 
