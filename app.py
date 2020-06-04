@@ -87,27 +87,52 @@ def insert_listener(email, username):
 def create_table():
 
 
-    
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS Artists(name TEXT NOT NULL,surname TEXT NOT NULL);
-    ''')
+    sql_t1="""CREATE TABLE IF NOT EXISTS Artists(
+        name VARCHAR(100) NOT NULL,
+        surname VARCHAR(100) NOT NULL,
+        CONSTRAINT artistsfullname UNIQUE (name,surname)
+        );"""    
+    c.execute(sql_t1)
 
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS Listeners(email TEXT NOT NULL,
-    username TEXT NOT NULL);
-    ''')
+    sql_t2="""CREATE TABLE IF NOT EXISTS Listeners(
+        email VARCHAR(100) NOT NULL,
+        username VARCHAR(100) NOT NULL,
+        CONSTRAINT listenerusername UNIQUE (username));"""    
+    c.execute(sql_t2)
 
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS Albums(id INT NOT NULL,
-    genre TEXT NOT NULL, title TEXT, creator TEXT NOT NULL,operation TEXT);
-    ''')
+    sql_t3="""CREATE TABLE IF NOT EXISTS Albums(
+        id INT NOT NULL,
+        genre VARCHAR(30) NOT NULL,
+        title TEXT NOT NULL,
+        creator VARCHAR(200) NOT NULL,
+        operation VARCHAR(30),
+        PRIMARY KEY (id));"""   
+    c.execute(sql_t3)
 
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS Songs(id INT NOT NULL,
-    title TEXT NOT NULL, albumid INT NOT NULL,creator TEXT NOT NULL,asistantartist TEXT NOT NULL,operation TEXT);
-    ''')
+    sql_t4="""CREATE TABLE IF NOT EXISTS Songs(
+        id INT NOT NULL,
+        title TEXT NOT NULL,
+        albumid INT NOT NULL,
+        creator VARCHAR(200) NOT NULL,
+        asistantartist VARCHAR(200) NOT NULL,
+        operation VARCHAR(30),
+        CONSTRAINT pkid PRIMARY KEY (id),
+        FOREIGN KEY (albumid) REFERENCES Albums(id));"""   
+    c.execute(sql_t4)
 
-    c.execute('''CREATE TABLE IF NOT EXISTS Main(wholiked TEXT,title TEXT ,songid INT,albumid INT,creator TEXT,asistantartist TEXT);''')
+    sql_t5="""CREATE TABLE IF NOT EXISTS Main(
+        wholiked VARCHAR(100),
+        title TEXT ,
+        songid INT,
+        albumid INT,
+        creator VARCHAR(200),
+        asistantartist VARCHAR(200),
+        FOREIGN KEY (wholiked) REFERENCES Listeners(username),
+        FOREIGN KEY (songid) REFERENCES Songs(id),
+        FOREIGN KEY (albumid) REFERENCES Albums(id));"""   
+    c.execute(sql_t5)
+
+
 
     stmt = "SHOW TABLES LIKE 'currentListener'"
     c.execute(stmt)
