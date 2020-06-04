@@ -44,9 +44,9 @@ def insert_album(likes=0):
     genre = str(session["properties"]["albumgenre"])
     title = str(session["properties"]["albumtitle"])
     creator = str(session["properties"]["creator"])
-    sqlite_insert_with_param = """INSERT INTO Albums (id,genre,title,creator)
-                          SELECT * FROM (SELECT %s, %s, %s,%s) AS tmp WHERE NOT EXISTS (SELECT id FROM Albums WHERE id = %s) LIMIT 1;"""
-    data_tuple = (id, genre, title, creator,id)
+    sqlite_insert_with_param = """INSERT INTO Albums (id,genre,title,creator,operation)
+                          SELECT * FROM (SELECT %s, %s, %s,%s,%s) AS tmp WHERE NOT EXISTS (SELECT id FROM Albums WHERE id = %s) LIMIT 1;"""
+    data_tuple = (id, genre, title, creator,"NULL",id,)
     c.execute(sqlite_insert_with_param, data_tuple)
     db.commit()
 
@@ -58,12 +58,12 @@ def insert_song(mutual, likes=0):
     album_id = session["properties"]["which_album"]
     creator = session["properties"]["creator"]
     asistantartist = session["properties"]["asistantartist"] if mutual is True else "no"
-    is_active="inactive"
+    operation="NULL"
     sqlite_insert_with_param = """INSERT INTO Songs
-                          (id,title,albumid,creator,asistantartist,active)
+                          (id,title,albumid,creator,asistantartist,operation)
                           SELECT * FROM (SELECT %s, %s, %s,%s,%s,%s) AS tmp WHERE NOT EXISTS (SELECT id FROM Songs WHERE id = %s) LIMIT 1;"""
 
-    c.execute(sqlite_insert_with_param,(id,title,album_id,creator,asistantartist,is_active,id,))
+    c.execute(sqlite_insert_with_param,(id,title,album_id,creator,asistantartist,operation,id,))
     db.commit()
 
 
@@ -81,6 +81,7 @@ def insert_listener(email, username):
                           (email, username)
                           VALUES (%s, %s);"""
     c.execute(sqlite_insert_with_param,(email,username,))
+    db.commit()
 
 
 def create_table():
@@ -98,16 +99,22 @@ def create_table():
 
     c.execute('''
     CREATE TABLE IF NOT EXISTS Albums(id INT NOT NULL,
-    genre TEXT NOT NULL, title TEXT, creator TEXT NOT NULL);
+    genre TEXT NOT NULL, title TEXT, creator TEXT NOT NULL,operation TEXT);
     ''')
 
     c.execute('''
     CREATE TABLE IF NOT EXISTS Songs(id INT NOT NULL,
-    title TEXT NOT NULL, albumid INT NOT NULL,creator TEXT NOT NULL,asistantartist TEXT NOT NULL,active TEXT NOT NULL);
+    title TEXT NOT NULL, albumid INT NOT NULL,creator TEXT NOT NULL,asistantartist TEXT NOT NULL,operation TEXT);
     ''')
 
     c.execute('''CREATE TABLE IF NOT EXISTS Main(wholiked TEXT,title TEXT ,songid INT,albumid INT,creator TEXT,asistantartist TEXT);''')
-    
+
+    stmt = "SHOW TABLES LIKE 'currentListener'"
+    c.execute(stmt)
+    result = c.fetchone()
+    if not result:
+        c.execute('''CREATE TABLE currentListener(username TEXT);''')
+        c.execute("INSERT INTO currentListener(username) VALUES('NULL');")
 
     db.commit()
 
@@ -126,10 +133,9 @@ def login():
         if request.form["button"] == "listener":
             email = str(request.form['email_of_listener'])
             username = str(request.form['username_of_listener'])
-            query = "SELECT * FROM Listeners where email = '{}' and username = '{}' ".format(
-                email, username)
+            query = "SELECT * FROM Listeners where email = %s and username = %s"
 
-            c.execute(query)
+            c.execute(query,(email,username))
 
             row = c.fetchone()
 
@@ -138,6 +144,10 @@ def login():
             if row == None:
                 insert_listener(
                     request.form['email_of_listener'], request.form['username_of_listener'])
+
+            sql="UPDATE currentListener SET username = %s "
+            c.execute(sql,(username,))
+            db.commit()
 
             session['user'] = ["listener", request.form['email_of_listener'],
                                request.form['username_of_listener']]
@@ -384,8 +394,8 @@ def view_all_artist():
         name = request.form['name']
         surname = request.form['surname']
         artist_name=name+"_"+surname
-        sql_cmd = "select title from Albums where creator = %s or asistantartist = %s "
-        c.execute(sql_cmd,(artist_name,artist_name,))
+        sql_cmd = "select title from Albums where creator = %s"
+        c.execute(sql_cmd,(artist_name,))
         rows = c.fetchall()
         db.commit()            
 
@@ -551,18 +561,21 @@ def like_album_or_song():
             c.execute("""DROP TRIGGER IF EXISTS likesongtrigger;""")
             db.commit()
 
-            sql_cmd = """ CREATE TRIGGER likesongtrigger AFTER UPDATE ON Songs
+            sql_cmd = """ CREATE TRIGGER likesongtrigger BEFORE UPDATE ON Songs
                 FOR EACH ROW BEGIN
-                IF( new.active = 'active' ) THEN
+                IF( new.operation = 'like song' ) THEN
+                SET new.operation = 'NULL';
+                SET @listenerliked = (SELECT username FROM currentListener LIMIT 1);
                 INSERT INTO Main (wholiked,title,songid,albumid,creator,asistantartist)
-                SELECT * FROM (SELECT %s, new.title,new.id,new.albumid,new.creator,new.asistantartist) AS tmp WHERE NOT EXISTS (SELECT wholiked, songid FROM Main WHERE wholiked = %s and songid = new.id) LIMIT 1;
+                SELECT * FROM (SELECT @listenerliked, new.title,new.id,new.albumid,new.creator,new.asistantartist) 
+                AS tmp WHERE NOT EXISTS (SELECT wholiked, songid FROM Main WHERE wholiked = @listenerliked and songid = new.id) LIMIT 1;
                 END IF;
                 END;"""
             
-            c.execute(sql_cmd,(username,username,))
+            c.execute(sql_cmd)
             db.commit()
 
-            sql_update="UPDATE Songs SET active='active' WHERE id = %s"
+            sql_update="UPDATE Songs SET operation='like song' WHERE id = %s"
             c.execute(sql_update,(songid,))
             db.commit()
             c.execute("""DROP TRIGGER IF EXISTS likesongtrigger;""")
@@ -577,18 +590,20 @@ def like_album_or_song():
             c.execute("""DROP TRIGGER IF EXISTS likesalbumtrigger;""")
             db.commit()
 
-            sql_cmd = """ CREATE TRIGGER likesalbumtrigger AFTER UPDATE ON Songs
+            sql_cmd = """ CREATE TRIGGER likesalbumtrigger BEFORE UPDATE ON Songs
                 FOR EACH ROW BEGIN
-                IF( new.active = 'active' ) THEN
+                IF( new.operation = 'like album' ) THEN
+                SET new.operation = 'NULL';
+                SET @listenerliked = (SELECT username FROM currentListener LIMIT 1);
                 INSERT INTO Main (wholiked,title,songid,albumid,creator,asistantartist)
-                SELECT * FROM (SELECT %s, new.title,new.id,new.albumid,new.creator,new.asistantartist) AS tmp WHERE NOT EXISTS (SELECT wholiked, songid FROM Main WHERE wholiked = %s and songid = new.id) LIMIT 1;
+                SELECT * FROM (SELECT @listenerliked, new.title,new.id,new.albumid,new.creator,new.asistantartist) AS tmp WHERE NOT EXISTS (SELECT wholiked, songid FROM Main WHERE wholiked = @listenerliked and songid = new.id) LIMIT 1;
                 END IF;
                 END;"""
             
-            c.execute(sql_cmd,(username,username,))
+            c.execute(sql_cmd)
             db.commit()
 
-            sql_update="UPDATE Songs SET active='active' WHERE albumid = %s"
+            sql_update="UPDATE Songs SET operation='like album' WHERE albumid = %s"
             c.execute(sql_update,(albumid,))
             db.commit()
             c.execute("""DROP TRIGGER IF EXISTS likesalbumtrigger;""")
@@ -618,19 +633,21 @@ def delete_song():
                 c.execute("""DROP TRIGGER IF EXISTS deletesongtrigger;""")
                 db.commit()
 
-                sql_cmd = """ CREATE TRIGGER deletesongtrigger AFTER DELETE ON Songs
+                sql_cmd = """ CREATE TRIGGER deletesongtrigger BEFORE UPDATE ON Songs
                     FOR EACH ROW BEGIN
-                    IF(old.id = %s ) THEN
-                    DELETE FROM Main Where songid = %s;
+                    IF(new.operation = 'delete song' ) THEN
+                    DELETE FROM Main Where songid = new.id;
                     END IF;
                     END;"""
                 
-                c.execute(sql_cmd,(songid,songid,))
+                c.execute(sql_cmd)
                 db.commit()
 
-                sql_detete="DELETE FROM Songs WHERE id = %s"
-                c.execute(sql_detete,(songid,))
+                sql_update = "UPDATE Songs SET operation = 'delete song' WHERE id = %s"
+                c.execute(sql_update,(songid,))
 
+                sql_detete = "DELETE FROM Songs Where id = %s";
+                c.execute(sql_detete,(songid,))
                 db.commit()
                 c.execute("""DROP TRIGGER IF EXISTS deletesongtrigger;""")
                 db.commit()
@@ -663,16 +680,19 @@ def delete_album():
                 c.execute("""DROP TRIGGER IF EXISTS deletealbumtrigger;""")
                 db.commit()
 
-                sql_cmd = """ CREATE TRIGGER deletealbumtrigger AFTER DELETE ON Albums
+                sql_cmd = """ CREATE TRIGGER deletealbumtrigger BEFORE UPDATE ON Albums
                     FOR EACH ROW BEGIN
-                    IF(old.id = %s ) THEN
-                    DELETE FROM Main WHERE albumid = %s;
-                    DELETE FROM Songs WHERE albumid = %s;
+                    IF(new.operation = 'delete album' ) THEN
+                    DELETE FROM Main WHERE albumid = new.id;
+                    DELETE FROM Songs WHERE albumid = new.id;
                     END IF;
                     END;"""
                 
-                c.execute(sql_cmd,(albumid,albumid,albumid,))
+                c.execute(sql_cmd)
                 db.commit()
+
+                sql_update = "UPDATE Albums SET operation = 'delete album' WHERE id = %s"
+                c.execute(sql_update,(albumid,))
 
                 sql_delete="DELETE FROM Albums WHERE id = %s"
                 c.execute(sql_delete,(albumid,))
