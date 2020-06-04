@@ -582,28 +582,8 @@ def like_album_or_song():
             username = session["user"][2]
             songid = request.form["songid"]
 
-
-            c.execute("""DROP TRIGGER IF EXISTS likesongtrigger;""")
-            db.commit()
-
-            sql_cmd = """ CREATE TRIGGER likesongtrigger BEFORE UPDATE ON Songs
-                FOR EACH ROW BEGIN
-                IF( new.operation = 'like song' ) THEN
-                SET new.operation = 'NULL';
-                SET @listenerliked = (SELECT username FROM currentListener LIMIT 1);
-                INSERT INTO Main (wholiked,title,songid,albumid,creator,asistantartist)
-                SELECT * FROM (SELECT @listenerliked, new.title,new.id,new.albumid,new.creator,new.asistantartist) 
-                AS tmp WHERE NOT EXISTS (SELECT wholiked, songid FROM Main WHERE wholiked = @listenerliked and songid = new.id) LIMIT 1;
-                END IF;
-                END;"""
-            
-            c.execute(sql_cmd)
-            db.commit()
-
             sql_update="UPDATE Songs SET operation='like song' WHERE id = %s"
             c.execute(sql_update,(songid,))
-            db.commit()
-            c.execute("""DROP TRIGGER IF EXISTS likesongtrigger;""")
             db.commit()
 
         elif request.form["button"] == "album":
@@ -611,30 +591,9 @@ def like_album_or_song():
             username = session["user"][2]
             albumid = request.form["albumid"]
 
-
-            c.execute("""DROP TRIGGER IF EXISTS likesalbumtrigger;""")
-            db.commit()
-
-            sql_cmd = """ CREATE TRIGGER likesalbumtrigger BEFORE UPDATE ON Songs
-                FOR EACH ROW BEGIN
-                IF( new.operation = 'like album' ) THEN
-                SET new.operation = 'NULL';
-                SET @listenerliked = (SELECT username FROM currentListener LIMIT 1);
-                INSERT INTO Main (wholiked,title,songid,albumid,creator,asistantartist)
-                SELECT * FROM (SELECT @listenerliked, new.title,new.id,new.albumid,new.creator,new.asistantartist) AS tmp WHERE NOT EXISTS (SELECT wholiked, songid FROM Main WHERE wholiked = @listenerliked and songid = new.id) LIMIT 1;
-                END IF;
-                END;"""
-            
-            c.execute(sql_cmd)
-            db.commit()
-
             sql_update="UPDATE Songs SET operation='like album' WHERE albumid = %s"
             c.execute(sql_update,(albumid,))
             db.commit()
-            c.execute("""DROP TRIGGER IF EXISTS likesalbumtrigger;""")
-            db.commit()
-
-
 
     return render_template('like_album_or_song.html')
 
@@ -655,18 +614,6 @@ def delete_song():
             row=c.fetchall()
             creator=row[0][0]
             if creator==name+"_"+surname:
-                c.execute("""DROP TRIGGER IF EXISTS deletesongtrigger;""")
-                db.commit()
-
-                sql_cmd = """ CREATE TRIGGER deletesongtrigger BEFORE UPDATE ON Songs
-                    FOR EACH ROW BEGIN
-                    IF(new.operation = 'delete song' ) THEN
-                    DELETE FROM Main Where songid = new.id;
-                    END IF;
-                    END;"""
-                
-                c.execute(sql_cmd)
-                db.commit()
 
                 sql_update = "UPDATE Songs SET operation = 'delete song' WHERE id = %s"
                 c.execute(sql_update,(songid,))
@@ -674,8 +621,7 @@ def delete_song():
                 sql_detete = "DELETE FROM Songs Where id = %s";
                 c.execute(sql_detete,(songid,))
                 db.commit()
-                c.execute("""DROP TRIGGER IF EXISTS deletesongtrigger;""")
-                db.commit()
+
             else:
                 session["ERROR"]="You are not allowed to delete this song"
                 return redirect(url_for('error'))
@@ -697,24 +643,9 @@ def delete_album():
             row=c.fetchall()
             creator=row[0][0]
 
-
             name_surname=session["user"][1]+"_"+session["user"][2]
 
             if name_surname == str(creator):
-                
-                c.execute("""DROP TRIGGER IF EXISTS deletealbumtrigger;""")
-                db.commit()
-
-                sql_cmd = """ CREATE TRIGGER deletealbumtrigger BEFORE UPDATE ON Albums
-                    FOR EACH ROW BEGIN
-                    IF(new.operation = 'delete album' ) THEN
-                    DELETE FROM Main WHERE albumid = new.id;
-                    DELETE FROM Songs WHERE albumid = new.id;
-                    END IF;
-                    END;"""
-                
-                c.execute(sql_cmd)
-                db.commit()
 
                 sql_update = "UPDATE Albums SET operation = 'delete album' WHERE id = %s"
                 c.execute(sql_update,(albumid,))
@@ -723,13 +654,9 @@ def delete_album():
                 c.execute(sql_delete,(albumid,))
                 db.commit()
 
-                c.execute("""DROP TRIGGER IF EXISTS deletealbumtrigger;""")
-                db.commit()
             else:
                 session["ERROR"]="You are not allowed to delete this album."
                 return redirect(url_for('error'))
-
-
 
     return render_template('delete_album.html',Artist=artist_name)
 
