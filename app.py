@@ -117,16 +117,16 @@ def create_table():
         asistantartist VARCHAR(200) NOT NULL,
         operation VARCHAR(30),
         CONSTRAINT pkid PRIMARY KEY (id),
-        FOREIGN KEY (albumid) REFERENCES Albums(id));"""   
+        FOREIGN KEY (albumid) REFERENCES Albums(id));"""
     c.execute(sql_t4)
 
     sql_t5="""CREATE TABLE IF NOT EXISTS Main(
-        wholiked VARCHAR(100),
-        title TEXT ,
-        songid INT,
-        albumid INT,
-        creator VARCHAR(200),
-        asistantartist VARCHAR(200),
+        wholiked VARCHAR(100) NOT NULL,
+        title TEXT NOT NULL,
+        songid INT NOT NULL,
+        albumid INT NOT NULL,
+        creator VARCHAR(200) NOT NULL,
+        asistantartist VARCHAR(200) NOT NULL,
         FOREIGN KEY (wholiked) REFERENCES Listeners(username),
         FOREIGN KEY (songid) REFERENCES Songs(id),
         FOREIGN KEY (albumid) REFERENCES Albums(id));"""   
@@ -138,7 +138,7 @@ def create_table():
     c.execute(stmt)
     result = c.fetchone()
     if not result:
-        c.execute('''CREATE TABLE currentListener(username TEXT);''')
+        c.execute('''CREATE TABLE currentListener(username VARCHAR(100));''')
         c.execute("INSERT INTO currentListener(username) VALUES('NULL');")
 
     db.commit()
