@@ -35,6 +35,8 @@ def updating_song():
     sql_update_query = """Update Songs set title = %s where id = %s"""
     data = (new_title_of_song, songid)
     c.execute(sql_update_query, data)
+    sql_update_main="UPDATE Main SET title = %s WHERE songid = %s"
+    c.execute(sql_update_main,(new_title_of_song,songid,))
     db.commit()
 
 
@@ -97,7 +99,7 @@ def create_table():
     sql_t2="""CREATE TABLE IF NOT EXISTS Listeners(
         email VARCHAR(100) NOT NULL,
         username VARCHAR(100) NOT NULL,
-        CONSTRAINT listenerusername UNIQUE (username));"""    
+        PRIMARY KEY (username));"""    
     c.execute(sql_t2)
 
     sql_t3="""CREATE TABLE IF NOT EXISTS Albums(
@@ -153,6 +155,8 @@ app.static_folder = 'static'
 def login():
     create_table()
     session.pop("user",None)
+    session.pop("ERROR",None)
+    session.pop("goal",None)
 
     if request.method == 'POST':
         if request.form["button"] == "listener":
@@ -227,6 +231,9 @@ def artist():
             elif request.form["button"] == "update_a_song":
                 session["goal"] = "update_song"
                 return redirect(url_for('update_song'))
+
+            elif request.form["a"] == "home":
+                return redirect(url_for('login'))
 
         return render_template('artist.html', Artist_name=name)
 
