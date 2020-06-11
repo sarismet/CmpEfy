@@ -78,7 +78,7 @@ def insert_artist(nameandsurname):
     sql_start="""INSERT INTO Main (wholiked,title,songid,albumid,creator,asistantartist)
                     VALUES (%s,%s,%s,%s,%s,%s);
                 """
-    c.execute(sql_start,("the system","the system title",0,0,"nameandsurname","no",))
+    c.execute(sql_start,("the system","the system title",0,0,nameandsurname,"no",))
     db.commit()
 
 def insert_listener(email, username):
@@ -476,7 +476,7 @@ def rank_artists():
 
 
     sql_cmd = """select artist,count(artist) from(select creator as artist from Main 
-    union all select asistantartist as artist from Main) Main where artist <>'no' group by artist order by count(artist) desc limit 3;"""
+    union all select asistantartist as artist from Main) Main where artist <>'no' group by artist order by count(artist) desc;"""
 
     c.execute(sql_cmd)
     rows = c.fetchall()
