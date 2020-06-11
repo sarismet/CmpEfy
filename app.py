@@ -66,6 +66,10 @@ def insert_song(mutual, likes=0):
                           SELECT * FROM (SELECT %s, %s, %s,%s,%s,%s) AS tmp WHERE NOT EXISTS (SELECT id FROM Songs WHERE id = %s) LIMIT 1;"""
 
     c.execute(sqlite_insert_with_param,(id,title,album_id,creator,asistantartist,operation,id,))
+    sql_start="""INSERT INTO Main (wholiked,title,songid,albumid,creator,asistantartist)
+                    VALUES (%s,%s,%s,%s,%s,%s);
+                """
+    c.execute(sql_start,("the system","the system title",0,0,"creator is the system","asistan is the system",))
     db.commit()
 
 
@@ -127,11 +131,7 @@ def create_table():
         songid INT NOT NULL,
         albumid INT NOT NULL,
         creator VARCHAR(200) NOT NULL,
-        asistantartist VARCHAR(200) NOT NULL,
-        FOREIGN KEY (wholiked) REFERENCES Listeners(username),
-        FOREIGN KEY (songid) REFERENCES Songs(id),
-        FOREIGN KEY (albumid) REFERENCES Albums(id),
-        FOREIGN KEY (creator) REFERENCES Artists(nameandsurname));"""   
+        asistantartist VARCHAR(200) NOT NULL);"""   
     c.execute(sql_t5)
 
 
