@@ -69,12 +69,10 @@ def insert_song(mutual, likes=0):
     db.commit()
 
 
-def insert_artist(name, surname):
+def insert_artist(nameandsurname):
 
-    sqlite_insert_with_param = """INSERT INTO Artists
-                          (name,surname)
-                          VALUES (%s,%s);"""
-    c.execute(sqlite_insert_with_param,(name,surname))
+    sqlite_insert_with_param = """INSERT INTO Artists(nameandsurname) VALUES (%s);"""
+    c.execute(sqlite_insert_with_param,(nameandsurname,))
     db.commit()
 
 def insert_listener(email, username):
@@ -90,9 +88,8 @@ def create_table():
 
 
     sql_t1="""CREATE TABLE IF NOT EXISTS Artists(
-        name VARCHAR(100) NOT NULL,
-        surname VARCHAR(100) NOT NULL,
-        CONSTRAINT artistsfullname UNIQUE (name,surname)
+        nameandsurname VARCHAR(200) NOT NULL,
+        PRIMARY KEY (nameandsurname)
         );"""    
     c.execute(sql_t1)
 
@@ -108,7 +105,8 @@ def create_table():
         title TEXT NOT NULL,
         creator VARCHAR(200) NOT NULL,
         operation VARCHAR(30),
-        PRIMARY KEY (id));"""   
+        PRIMARY KEY (id),
+        FOREIGN KEY (creator) REFERENCES Artists(nameandsurname));"""   
     c.execute(sql_t3)
 
     sql_t4="""CREATE TABLE IF NOT EXISTS Songs(
@@ -119,7 +117,8 @@ def create_table():
         asistantartist VARCHAR(200) NOT NULL,
         operation VARCHAR(30),
         CONSTRAINT pkid PRIMARY KEY (id),
-        FOREIGN KEY (albumid) REFERENCES Albums(id));"""
+        FOREIGN KEY (albumid) REFERENCES Albums(id),
+        FOREIGN KEY (creator) REFERENCES Artists(nameandsurname));"""
     c.execute(sql_t4)
 
     sql_t5="""CREATE TABLE IF NOT EXISTS Main(
@@ -131,7 +130,8 @@ def create_table():
         asistantartist VARCHAR(200) NOT NULL,
         FOREIGN KEY (wholiked) REFERENCES Listeners(username),
         FOREIGN KEY (songid) REFERENCES Songs(id),
-        FOREIGN KEY (albumid) REFERENCES Albums(id));"""   
+        FOREIGN KEY (albumid) REFERENCES Albums(id),
+        FOREIGN KEY (creator) REFERENCES Artists(nameandsurname));"""   
     c.execute(sql_t5)
 
 
@@ -142,7 +142,6 @@ def create_table():
     if not result:
         c.execute('''CREATE TABLE currentListener(username VARCHAR(100));''')
         c.execute("INSERT INTO currentListener(username) VALUES('NULL');")
-
     db.commit()
 
 
@@ -187,14 +186,14 @@ def login():
             name=request.form['name_of_artist']
             surname=request.form['surname_of_artist']
 
-            query = "SELECT * FROM Artists where name = %s and surname = %s "
+            query = "SELECT * FROM Artists where nameandsurname = %s "
 
-            c.execute(query, (name,surname,))
+            s=str(name)+"_"+str(surname)
+            c.execute(query, (s,))
 
             row = c.fetchone()
             if row == None:
-                insert_artist(
-                    request.form['name_of_artist'], request.form['surname_of_artist'])
+                insert_artist(s)
 
             session['user'] = ["artist", request.form['name_of_artist'],
                                request.form['surname_of_artist']]
@@ -361,7 +360,6 @@ def update_album():
 
             return redirect(url_for('artist'))
         else:
-            print("hata aldık row[0] is",creator)
             session["ERROR"]="You are not allowed to update this album"
             return redirect(url_for('error'))
 
@@ -406,13 +404,13 @@ def view_all_everything():
     for row in rows:
         my_album_dict.append({"genre": row[0], "title": row[1]})
         
-    c.execute("select name,surname from Artists")
+    c.execute("select nameandsurname from Artists")
     rows = c.fetchall()
     db.commit()
     my_artist_array = []
     for row in rows:
-        name=row[0]
-        surname=row[1]
+        name=row[0].split("_")[0]
+        surname=row[0].split("_")[1]
         my_artist_array.append({"name":name,"surname":surname})
 
     return render_template('view_all_everything.html', my_song_li=my_song_array, my_album_di=my_album_dict, my_artist_li=my_artist_array)
@@ -480,7 +478,6 @@ def rank_artists():
 
     c.execute(sql_cmd)
     rows = c.fetchall()
-    print("rows is : ",rows,file=sys.stdout)
     db.commit()            
 
     rank_array = []
