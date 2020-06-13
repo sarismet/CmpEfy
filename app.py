@@ -9,16 +9,25 @@ from flask import(
     send_from_directory
 )
 import sys
+import re
 import mysql.connector
 
 db = mysql.connector.connect(
     host="localhost",
     user="root",
     passwd="sarismet",
-    database="mydb"
+    database="irelia"
 )
 c = db.cursor()
 
+
+def get_artist_name():
+    artist_name=""
+    if len(session["user"])==3:
+        artist_name=session["user"][1]+" "+session["user"][2]
+    elif len(session["user"])==2:
+        artist_name=session["user"][1]
+    return artist_name
 
 def updating_album():
     albumid = str(session["properties"]["id_of_album"])
@@ -144,6 +153,9 @@ def create_table():
     if not result:
         c.execute('''CREATE TABLE currentListener(username VARCHAR(100));''')
         c.execute("INSERT INTO currentListener(username) VALUES('NULL');")
+
+    c.execute('''CREATE TABLE IF NOT EXISTS rank_artists(artistnames VARCHAR(200));''')
+    c.execute('''CREATE TABLE IF NOT EXISTS partners(artistnames VARCHAR(200));''')
     db.commit()
 
 
@@ -295,26 +307,36 @@ def listener():
 
 @app.route('/add_song', methods=['GET', 'POST'])
 def add_song():
-    artist_name=session["user"][1]+" "+session["user"][2]
+    artist_name=get_artist_name()
 
-    
     if request.method == 'POST':
         mutual = False
         if request.form["button"] == "add_individual_song":
-            creator = session['user'][1]+"_"+session['user'][2]
+            creator =re.sub(" ", "_", artist_name)
+
             session["properties"] = {"songid": request.form['ID_of_song'], "songtitle": request.form['title_of_song'],
                                         "which_album": request.form['which_album'], "creator": creator}
 
         elif request.form["button"] == "add_common_song":
             mutual = True
-            creator = session['user'][1]+"_"+session['user'][2]
-            temp=str(request.form['name_of_assistant'])
-            asistan_name=temp.split(" ")[0]
-            asistan_surname=temp.split(" ")[1]
-            asistantartist=asistan_name+"_"+asistan_surname
+            creator =re.sub(" ", "_", artist_name)
+            names=str(request.form['name_of_assistant'])
+
+            asistans=re.sub(" ", "_", names)
+
+            check=asistans.split(",")
+            for ch in check:
+
+                stmt = "SELECT nameandsurname FROM Artists WHERE nameandsurname LIKE %s"
+                c.execute(stmt,(ch,))
+                result = c.fetchone()
+                if not result:
+                    insert_artist(ch)
+
+
             session["properties"] = {"songid": request.form['ID_of_song'], "songtitle": request.form['title_of_song'],
                                         "which_album": request.form['which_album'],
-                                        "asistantartist":asistantartist , "creator": creator}
+                                        "asistantartist":asistans , "creator": creator}
 
         insert_song(mutual)
 
@@ -325,35 +347,26 @@ def add_song():
 
 @app.route('/add_album', methods=['GET', 'POST'])
 def add_album():
-    artist_name=session["user"][1]+" "+session["user"][2]
+    artist_name=get_artist_name()
     if request.method == 'POST':
-        creator = session['user'][1]+"_"+session['user'][2]
+        creator =re.sub(" ", "_", artist_name)
         session["properties"] = {"albumid": request.form['id_of_album'], "albumgenre": request.form['genre_of_album'],
                                     "albumtitle": request.form['title_of_album'], "creator": creator}
-
         insert_album()
-
         return redirect(url_for('artist'))
-
     return render_template('add_album.html',Artist=artist_name)
-
-
-
-
-
-
-
 
 @app.route('/update_album', methods=['GET', 'POST'])
 def update_album():
-    artist_name=session["user"][1]+" "+session["user"][2]
+    artist_name=get_artist_name()
+
     if request.method == 'POST':
         albumid=request.form['id_of_album']
         sql="SELECT creator From Albums WHERE id = %s"
         c.execute(sql,(albumid,))
         row=c.fetchall()
         creator=row[0][0]
-        if creator==session["user"][1]+"_"+session["user"][2]:
+        if creator==re.sub(" ","_",artist_name):
 
             session["properties"] = {"id_of_album": request.form['id_of_album'], "new_genre_of_album":
                                         request.form['new_genre_of_album'], "new_title_of_album": request.form['new_title_of_album']}
@@ -370,7 +383,7 @@ def update_album():
 
 @app.route('/update_song', methods=['GET', 'POST'])
 def update_song():
-    artist_name=session["user"][1]+" "+session["user"][2]
+    artist_name=get_artist_name()
     if "update_song" == session["goal"]:
         if request.method == 'POST':
             songid=request.form['id_of_song']
@@ -378,7 +391,7 @@ def update_song():
             c.execute(sql,(songid,))
             row=c.fetchall()
             creator=row[0][0]
-            if creator==session["user"][1]+"_"+session["user"][2]:
+            if creator==re.sub(" ","_",artist_name):
                 session["properties"] = {"id_of_song": songid,
                                         "new_title_of_song": request.form['new_title_of_song']}
                 updating_song()
@@ -434,9 +447,9 @@ def view_all_artist():
         array_of_albums = []
         for row in rows:
             array_of_albums.append(row[0])
-
-        sql_cmd = "select title from Songs where creator = %s or asistantartist = %s "
-        c.execute(sql_cmd,(artist_name,artist_name,))
+        keyword="%"+artist_name+"%"
+        sql_cmd = "select title from Songs where creator = %s or asistantartist LIKE %s "
+        c.execute(sql_cmd,(artist_name,keyword,))
         rows = c.fetchall()
         db.commit()            
 
@@ -471,22 +484,7 @@ def view_all_songs_of_an_album():
     
 
 
-@app.route('/rank_artists', methods=['GET', 'POST'])
-def rank_artists():
 
-
-    sql_cmd = """select artist,count(artist) from(select creator as artist from Main 
-    union all select asistantartist as artist from Main) Main where artist <>'no' group by artist order by count(artist) desc;"""
-
-    c.execute(sql_cmd)
-    rows = c.fetchall()
-    db.commit()            
-
-    rank_array = []
-    for row in rows:
-        rank_array.append(row[0])
-
-    return render_template('rank_artist.html', artists=rank_array)
 
 
 @app.route('/view_a_song_with_specific_genre', methods=['GET', 'POST'])
@@ -546,9 +544,9 @@ def view_popular_song_of_an_artist():
         if request.form["button"] == "search":
 
             name_surname=request.form["name_of_artist"]+"_"+request.form["surname_of_artist"]
-
-            sql_cmd="SELECT title,count(title) FROM Main WHERE creator = %s or asistantartist = %s GROUP BY title ORDER BY count(*) DESC LIMIT 3;"
-            c.execute(sql_cmd,(name_surname,name_surname,))
+            keyword = "%"+name_surname+"%"
+            sql_cmd="SELECT title,count(title) FROM Main WHERE creator = %s or asistantartist LIKE %s GROUP BY title ORDER BY count(*) DESC LIMIT 3;"
+            c.execute(sql_cmd,(name_surname,keyword,))
             rows=c.fetchall()
             print("rows is : ",rows,file=sys.stdout)
             db.commit()
@@ -677,20 +675,8 @@ def view_partners():
         surname = request.form["surname_of_artist"]
         name_of_partners=[]
 
-        sql_drop="DROP PROCEDURE IF EXISTS myprocedure"
-        c.execute(sql_drop)
-
-        sql_procedure=""" CREATE PROCEDURE myprocedure(name TEXT,surname TEXT)
-        BEGIN
-        SELECT DISTINCT partner FROM 
-        (SELECT creator AS partner FROM Main WHERE Asistantartist = CONCAT(name,'_',surname) AND creator <> 'no' UNION ALL 
-        SELECT Asistantartist AS partner FROM Main WHERE creator = CONCAT(name,'_',surname) AND Asistantartist <> 'no' ) Main;
-        END;
-        """
-        c.execute(sql_procedure)
-        db.commit()
         
-        c.callproc('myprocedure',[name,surname,])
+        c.callproc('curdemo',[name,surname,])
         # print results
         print("Printing stored_results details",c.stored_results(),file=sys.stdout)
         for result in c.stored_results():
@@ -703,6 +689,34 @@ def view_partners():
 
     return render_template('view_partners.html')
 
+
+
+@app.route('/rank_artists', methods=['GET', 'POST'])
+def rank_artists():
+
+    sql_cmd2 = """select asistantartist from Main where asistantartist <> 'no';"""
+    c.execute(sql_cmd2)
+        
+    rows = c.fetchall()
+
+    for row in rows:
+        thename=row[0]
+        delim=","
+        c.callproc("Splitforrank",[thename,])
+    
+    sql_cmd = """insert into rank_artists select creator from Main;"""
+    c.execute(sql_cmd)
+    db.commit() 
+
+    sql_main="SELECT artistnames,count(artistnames) FROM rank_artists GROUP BY artistnames ORDER BY count(*) DESC;" 
+    c.execute(sql_main)
+    rank_array = []
+    rows=c.fetchall()
+    db.commit()
+    for row in rows:
+        rank_array.append(row[0])  
+    return render_template('rank_artist.html', artists=rank_array)
+    
 
 @app.route('/error', methods=['GET', 'POST'])
 def error():
