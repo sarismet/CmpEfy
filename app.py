@@ -320,9 +320,9 @@ def add_song():
         elif request.form["button"] == "add_common_song":
             mutual = True
             creator =re.sub(" ", "_", artist_name)
-            names=str(request.form['name_of_assistant'])
 
-            asistans=re.sub(" ", "_", names)
+            asistans=re.sub(", ", ",", str(request.form['name_of_assistant']))
+            asistans=re.sub(" ","_",asistans)
 
             check=asistans.split(",")
             for ch in check:
@@ -545,7 +545,7 @@ def view_popular_song_of_an_artist():
 
             name_surname=request.form["name_of_artist"]+"_"+request.form["surname_of_artist"]
             keyword = "%"+name_surname+"%"
-            sql_cmd="SELECT title,count(title) FROM Main WHERE creator = %s or asistantartist LIKE %s GROUP BY title ORDER BY count(*) DESC LIMIT 3;"
+            sql_cmd="SELECT title,count(title) FROM Main WHERE (creator = %s or asistantartist LIKE %s) and wholiked <> 'the system' GROUP BY title ORDER BY count(*) DESC LIMIT 3;"
             c.execute(sql_cmd,(name_surname,keyword,))
             rows=c.fetchall()
             print("rows is : ",rows,file=sys.stdout)
@@ -677,14 +677,14 @@ def view_partners():
 
         
         c.callproc('curdemo',[name,surname,])
-        # print results
         print("Printing stored_results details",c.stored_results(),file=sys.stdout)
         for result in c.stored_results():
             rows=result.fetchall()
             for row in rows:
                 name_of_partners.append(row[0].split("_")[0]+" "+row[0].split("_")[1])
         
-
+        c.execute("DELETE FROM partners;")
+        db.commit()
         return render_template('view_partners.html', partners=name_of_partners)
 
     return render_template('view_partners.html')
