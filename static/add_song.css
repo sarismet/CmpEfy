@@ -8,15 +8,7 @@
 }
 
 body {
-    background-image: url(add_song.jpg);
-
-    background-position: center center;
-
-    background-repeat: no-repeat;
     font-family: "Raleway", sans-serif;
-    background-attachment: fixed;
-    background-size: cover;
-
 }
 
 .app {
@@ -27,13 +19,86 @@ body {
     align-items: center;
 }
 
+header h1 {
+    margin: 50px 0px 30px 0px;
+    text-align: center;
+    font-size: 40px;
+}
 
+header p {
+    font-size: 20px;
+}
+
+.pads {
+    background-color: lightblue;
+    width: 100%;
+    display: flex;
+}
+
+.pads>div {
+    height: 100px;
+    width: 100px;
+    flex: 1;
+}
+
+.pad1 {
+    background: rgb(134, 221, 134);
+}
+
+.pad2 {
+    background: rgb(17, 22, 88);
+}
+
+.pad3 {
+    background: rgb(155, 60, 104);
+}
+
+.pad4 {
+    background: rgb(211, 114, 24);
+}
+
+.pad5 {
+    background: rgb(51, 48, 45);
+}
+
+.pad6 {
+    background: rgb(149, 115, 245);
+}
+
+
+.visual>div {
+    position: absolute;
+    bottom: 0%;
+    height: 50px;
+    width: 50px;
+    border-radius: 50%;
+    transform: scale(1);
+    z-index: -1;
+}
+
+@keyframes jump {
+    0% {
+        bottom: 0%;
+        left: 20%;
+    }
+
+    50% {
+        bottom: 50%;
+        z-index: 1;
+        left: 50%;
+    }
+
+    100% {
+        bottom: 00%;
+        left: 80%;
+    }
+}
 
 .form-box {
     width: 425px;
-    height: 500px;
+    height: 575px;
     position: relative;
-    margin-top: 15%;
+    margin-top: 5%;
     background: whitesmoke;
     padding: 5px;
     border: red;
@@ -53,6 +118,44 @@ body {
 
 }
 
+.bottom-box {
+    width: 400px;
+    margin: 15px auto;
+    position: relative;
+    box-shadow: 0 0 20px 9px #ff61241f;
+    border-radius: 30px;
+}
+
+.toggle-btn[id='1'] {
+    margin-left: 72px;
+}
+
+.toggle-btn[id='2'] {
+    margin-left: 132px;
+}
+
+.toggle-btn {
+
+    padding: 10px 10px;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    outline: none;
+    position: relative;
+}
+
+.social-icons {
+    margin: 30px auto;
+    text-align: center;
+}
+
+.social-icons i {
+
+    margin: 0 12px;
+    box-shadow: 0 0 20px 0 #7f7f7f3d;
+    cursor: pointer;
+    border-radius: 50%;
+}
 
 p.text {
     font-family: 'Caveat', cursive;
@@ -66,7 +169,6 @@ p.text {
     align-items: center;
     position: absolute;
     width: 75%;
-    margin-left: 47px;
 
     transition: .5s;
     font-size: 15px;
@@ -100,4 +202,12 @@ p.text {
     border: 0;
     outline: none;
     border-radius: 30px;
+}
+
+#login {
+    left: 55px;
+}
+
+#register {
+    left: 450px;
 }
